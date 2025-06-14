@@ -8,10 +8,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
-import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers, User as UserIcon, LogOut } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers, User as UserIcon, LogOut, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
     const hours = 7 + Math.floor(i / 2);
@@ -55,6 +56,7 @@ const PadelBooking = () => {
     }
 
     const reservationOpenDate = date ? calculateReservationOpenDate(date) : null;
+    const isBookingAlreadyOpen = reservationOpenDate ? reservationOpenDate < new Date() : false;
     
     const handleBooking = async () => {
         if (!date || !startTime || !endTime) {
@@ -193,14 +195,28 @@ const PadelBooking = () => {
                                 <p><strong>Terrain :</strong> Padel {selectedCourt}</p>
                                 <p><strong>Date :</strong> {format(date, 'dd/MM/yyyy')}</p>
                                 <p><strong>Heure :</strong> de {startTime} à {endTime}</p>
-                                {reservationOpenDate && (
+                                
+                                {isBookingAlreadyOpen ? (
+                                    <Alert>
+                                        <Info className="h-4 w-4" />
+                                        <AlertTitle>Information</AlertTitle>
+                                        <AlertDescription>
+                                            PadelBooking permet d'être les premiers sur les réservations pour les créneaux pas encore disponibles. Pour cette date, les réservations sont déjà ouvertes.
+                                            <br />
+                                            <a href="https://lagardereparisracing.kirola.fr/users/sign_in" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
+                                                Réservez directement sur le site du Racing.
+                                            </a>
+                                        </AlertDescription>
+                                    </Alert>
+                                ) : reservationOpenDate && (
                                     <p className="text-sm text-primary font-semibold">
                                         Ouverture de la réservation le {format(reservationOpenDate, "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
                                     </p>
                                 )}
-                                <Button className="w-full mt-4" onClick={handleBooking} disabled={isSubmitting}>
+
+                                <Button className="w-full mt-4" onClick={handleBooking} disabled={isSubmitting || isBookingAlreadyOpen}>
                                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                    Valider cette réservation
+                                    Valider cette pré-réservation
                                 </Button>
                             </CardContent>
                         </Card>
