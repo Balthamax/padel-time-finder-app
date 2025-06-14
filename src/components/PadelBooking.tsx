@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -7,47 +6,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { fetchAvailability, TimeSlot } from '@/services/availabilityService';
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
 import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers } from 'lucide-react';
 
 const PadelBooking = () => {
     const [date, setDate] = useState<Date | undefined>(new Date());
-    const [slots, setSlots] = useState<TimeSlot[]>([]);
-    const [selectedSlot, setSelectedSlot] = useState<TimeSlot | undefined>(undefined);
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
     const [selectedCourt, setSelectedCourt] = useState<string>("1");
-    const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
-        if (date) {
-            setIsLoading(true);
-            setSlots([]);
-            setSelectedSlot(undefined);
-            fetchAvailability(date, selectedCourt)
-                .then(setSlots)
-                .finally(() => setIsLoading(false));
-        }
+        setStartTime('');
+        setEndTime('');
     }, [date, selectedCourt]);
     
     const handleDateChange = (newDate: Date | undefined) => {
         setDate(newDate);
     }
 
-    const reservationOpenDate = date && selectedSlot ? calculateReservationOpenDate(date) : null;
-
-    const isWeekend = (d: Date) => {
-        const day = d.getDay();
-        return day === 6 || day === 0; // Samedi ou Dimanche
-    };
+    const reservationOpenDate = date ? calculateReservationOpenDate(date) : null;
 
     const handleBooking = async () => {
-        if (!date || !selectedSlot) {
+        if (!date || !startTime || !endTime) {
             toast({
                 title: "Sélection incomplète",
-                description: "Veuillez choisir une date et un créneau.",
+                description: "Veuillez choisir une date et des heures de début et de fin.",
                 variant: "destructive",
             });
             return;
@@ -61,7 +48,8 @@ const PadelBooking = () => {
         console.log('Booking submitted for:', {
             court: selectedCourt,
             match_date: format(date, 'yyyy-MM-dd'),
-            match_time: selectedSlot.time,
+            match_time_start: startTime,
+            match_time_end: endTime,
             reservation_opens: reservationOpenDate?.toISOString(),
         });
 
@@ -69,7 +57,8 @@ const PadelBooking = () => {
             title: "Réservation validée !",
             description: "Ceci est une simulation. Aucune vraie réservation n'a été faite.",
         });
-        setSelectedSlot(undefined);
+        setStartTime('');
+        setEndTime('');
         setIsSubmitting(false);
     };
 
@@ -127,37 +116,38 @@ const PadelBooking = () => {
                              <CardDescription>{date ? format(date, 'eeee dd MMMM yyyy', { locale: fr }) : 'Sélectionnez une date.'}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {isLoading ? (
-                                <div className="flex justify-center items-center h-40"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
-                            ) : date && isWeekend(date) ? (
-                                <div className="text-center text-muted-foreground p-4 bg-muted rounded-md">Les réservations pour le week-end se font sur place.</div>
-                            ) : slots.length > 0 ? (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                    {slots.map(slot => (
-                                        <Button
-                                            key={slot.time}
-                                            variant={selectedSlot?.time === slot.time ? 'default' : (slot.available ? 'outline' : 'secondary')}
-                                            disabled={!slot.available}
-                                            onClick={() => setSelectedSlot(slot)}
-                                            className={`transition-all duration-200 ${!slot.available ? 'cursor-not-allowed text-muted-foreground' : ''} ${selectedSlot?.time === slot.time ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
-                                        >
-                                            {slot.time}
-                                        </Button>
-                                    ))}
+                           <div className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="start-time">Heure de début</Label>
+                                        <Input
+                                            id="start-time"
+                                            type="time"
+                                            value={startTime}
+                                            onChange={(e) => setStartTime(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="end-time">Heure de fin</Label>
+                                        <Input
+                                            id="end-time"
+                                            type="time"
+                                            value={endTime}
+                                            onChange={(e) => setEndTime(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="text-center text-muted-foreground p-4">Aucun créneau disponible.</div>
-                            )}
+                            </div>
                         </CardContent>
                     </Card>
 
-                    {selectedSlot && date && (
+                    {startTime && endTime && date && (
                         <Card className="bg-primary/10 border-primary/30 animate-in fade-in-50 duration-500">
                             <CardHeader><CardTitle>Résumé de la réservation</CardTitle></CardHeader>
                             <CardContent className="space-y-3">
                                 <p><strong>Terrain :</strong> Padel {selectedCourt}</p>
                                 <p><strong>Date :</strong> {format(date, 'dd/MM/yyyy')}</p>
-                                <p><strong>Heure :</strong> {selectedSlot.time}</p>
+                                <p><strong>Heure :</strong> de {startTime} à {endTime}</p>
                                 {reservationOpenDate && (
                                     <p className="text-sm text-primary font-semibold">
                                         Ouverture de la réservation le {format(reservationOpenDate, "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
