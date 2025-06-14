@@ -1,19 +1,22 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { fetchAvailability, TimeSlot } from '@/services/availabilityService';
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
-import { Loader2, Calendar as CalendarIcon, Clock, Send } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers } from 'lucide-react';
 
 const PadelBooking = () => {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [slots, setSlots] = useState<TimeSlot[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<TimeSlot | undefined>(undefined);
+    const [selectedCourt, setSelectedCourt] = useState<string>("1");
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
@@ -56,6 +59,7 @@ const PadelBooking = () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         console.log('Booking submitted for:', {
+            court: selectedCourt,
             match_date: format(date, 'yyyy-MM-dd'),
             match_time: selectedSlot.time,
             reservation_opens: reservationOpenDate?.toISOString(),
@@ -98,7 +102,28 @@ const PadelBooking = () => {
                 <div className="space-y-6">
                     <Card>
                         <CardHeader>
-                             <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> 2. Choisissez un créneau</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><Layers className="w-5 h-5" /> 2. Terrain souhaité</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <RadioGroup defaultValue={selectedCourt} onValueChange={setSelectedCourt} className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="1" id="padel1" />
+                                    <Label htmlFor="padel1">Padel 1</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="2" id="padel2" />
+                                    <Label htmlFor="padel2">Padel 2</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="3" id="padel3" />
+                                    <Label htmlFor="padel3">Padel 3</Label>
+                                </div>
+                            </RadioGroup>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                             <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> 3. Choisissez un créneau</CardTitle>
                              <CardDescription>{date ? format(date, 'eeee dd MMMM yyyy', { locale: fr }) : 'Sélectionnez une date.'}</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -130,6 +155,7 @@ const PadelBooking = () => {
                         <Card className="bg-primary/10 border-primary/30 animate-in fade-in-50 duration-500">
                             <CardHeader><CardTitle>Résumé de la réservation</CardTitle></CardHeader>
                             <CardContent className="space-y-3">
+                                <p><strong>Terrain :</strong> Padel {selectedCourt}</p>
                                 <p><strong>Date :</strong> {format(date, 'dd/MM/yyyy')}</p>
                                 <p><strong>Heure :</strong> {selectedSlot.time}</p>
                                 {reservationOpenDate && (
