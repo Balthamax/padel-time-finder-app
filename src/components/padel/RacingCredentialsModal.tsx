@@ -1,3 +1,5 @@
+
+import { useState } from "react";
 import {
     Dialog,
     DialogContent,
@@ -9,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 interface RacingCredentialsModalProps {
     isOpen: boolean;
@@ -32,6 +34,8 @@ const RacingCredentialsModal = ({
     onSubmit,
     isSubmitting,
 }: RacingCredentialsModalProps) => {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -53,13 +57,30 @@ const RacingCredentialsModal = ({
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="racing-password">Mot de passe Lagardère Paris Racing</Label>
-                        <Input
-                            id="racing-password"
-                            type="password"
-                            value={racingPassword}
-                            onChange={(e) => setRacingPassword(e.target.value)}
-                            placeholder="Votre mot de passe"
-                        />
+                        <div className="relative">
+                            <Input
+                                id="racing-password"
+                                type={showPassword ? "text" : "password"}
+                                value={racingPassword}
+                                onChange={(e) => setRacingPassword(e.target.value)}
+                                placeholder="Votre mot de passe"
+                                className="pr-10"
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute inset-y-0 right-0 text-muted-foreground"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                aria-label={showPassword ? "Cacher le mot de passe" : "Afficher le mot de passe"}
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-5 w-5" />
+                                ) : (
+                                    <Eye className="h-5 w-5" />
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </div>
                 <DialogFooter>
