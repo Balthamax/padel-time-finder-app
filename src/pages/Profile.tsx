@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Info, Loader2, Pencil, XCircle } from 'lucide-react';
+import { Eye, EyeOff, Info, Loader2, Pencil, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
@@ -52,6 +52,7 @@ const Profile = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [cancellingId, setCancellingId] = useState<string | null>(null);
     const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
 
@@ -253,9 +254,19 @@ const Profile = () => {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Password Racing</FormLabel>
-                                                        <FormControl>
-                                                            <Input type="password" {...field} value={field.value ?? ''} />
-                                                        </FormControl>
+                                                        <div className="relative">
+                                                          <FormControl>
+                                                              <Input type={showPassword ? 'text' : 'password'} {...field} value={field.value ?? ''} className="pr-10" />
+                                                          </FormControl>
+                                                          <button
+                                                              type="button"
+                                                              onClick={() => setShowPassword(!showPassword)}
+                                                              className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                                                              aria-label={showPassword ? "Cacher le mot de passe" : "Montrer le mot de passe"}
+                                                          >
+                                                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                          </button>
+                                                        </div>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
