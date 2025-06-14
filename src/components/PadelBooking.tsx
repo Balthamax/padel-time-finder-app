@@ -11,7 +11,6 @@ import { calculateReservationOpenDate } from '@/utils/dateUtils';
 import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers, User as UserIcon, LogOut } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
-import { AuthPopup } from './AuthPopup';
 import { supabase } from '@/integrations/supabase/client';
 
 const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
@@ -28,7 +27,6 @@ const PadelBooking = () => {
     const [endTime, setEndTime] = useState('');
     const [selectedCourt, setSelectedCourt] = useState<string>("1");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -90,14 +88,6 @@ const PadelBooking = () => {
         setEndTime('');
         setIsSubmitting(false);
     };
-    
-    const handleBookingClick = () => {
-      if (!user) {
-        setIsAuthPopupOpen(true);
-      } else {
-        handleBooking();
-      }
-    };
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">
@@ -112,11 +102,7 @@ const PadelBooking = () => {
                                <LogOut className="h-5 w-5" />
                            </Button>
                         </div>
-                    ) : (
-                        <Button variant="outline" onClick={() => setIsAuthPopupOpen(true)}>
-                            <UserIcon className="mr-2 h-4 w-4" /> Se connecter
-                        </Button>
-                    )}
+                    ) : null}
                 </div>
             </header>
 
@@ -212,7 +198,7 @@ const PadelBooking = () => {
                                         Ouverture de la réservation le {format(reservationOpenDate, "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
                                     </p>
                                 )}
-                                <Button className="w-full mt-4" onClick={handleBookingClick} disabled={isSubmitting}>
+                                <Button className="w-full mt-4" onClick={handleBooking} disabled={isSubmitting}>
                                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                     Valider cette réservation
                                 </Button>
@@ -224,7 +210,6 @@ const PadelBooking = () => {
              <footer className="text-center mt-12 text-sm text-muted-foreground">
                 <p>⚠️ Les données de disponibilité sont simulées. Connectez ce front-end à votre propre API pour des données réelles.</p>
             </footer>
-            <AuthPopup open={isAuthPopupOpen} onOpenChange={setIsAuthPopupOpen} onSuccess={handleBooking} />
         </div>
     );
 }
