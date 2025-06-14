@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 interface AuthPopupProps {
   open: boolean;
@@ -21,14 +21,14 @@ interface AuthPopupProps {
 }
 
 export const AuthPopup = ({ open, onOpenChange, onSuccess }: AuthPopupProps) => {
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [racingId, setRacingId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -45,7 +45,6 @@ export const AuthPopup = ({ open, onOpenChange, onSuccess }: AuthPopupProps) => 
             data: {
               first_name: firstName,
               last_name: lastName,
-              racing_id: racingId,
             },
             emailRedirectTo: window.location.origin,
           },
@@ -96,10 +95,6 @@ export const AuthPopup = ({ open, onOpenChange, onSuccess }: AuthPopupProps) => 
                   <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="racingId">Identifiant Racing</Label>
-                <Input id="racingId" value={racingId} onChange={(e) => setRacingId(e.target.value)} required />
-              </div>
             </>
           )}
           <div className="space-y-2">
@@ -108,7 +103,23 @@ export const AuthPopup = ({ open, onOpenChange, onSuccess }: AuthPopupProps) => 
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
