@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
     const hours = 7 + Math.floor(i / 2);
@@ -28,6 +30,8 @@ const PadelBooking = () => {
     const [endTime, setEndTime] = useState('');
     const [selectedCourt, setSelectedCourt] = useState<string>("1");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [partners, setPartners] = useState<[string, string, string]>(['', '', '']);
+    const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -55,14 +59,29 @@ const PadelBooking = () => {
         setDate(newDate);
     }
 
+    const handlePartnerChange = (index: number, value: string) => {
+        const newPartners = [...partners] as [string, string, string];
+        newPartners[index] = value;
+        setPartners(newPartners);
+    };
+
     const reservationOpenDate = date ? calculateReservationOpenDate(date) : null;
     const isBookingAlreadyOpen = reservationOpenDate ? reservationOpenDate < new Date() : false;
     
-    const handleBooking = async () => {
+    const submitBooking = async () => {
         if (!date || !startTime || !endTime) {
             toast({
                 title: "Sélection incomplète",
                 description: "Veuillez choisir une date et des heures de début et de fin.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (partners.some(p => p.trim() === '')) {
+            toast({
+                title: "Noms des partenaires manquants",
+                description: "Veuillez renseigner les noms des 3 partenaires.",
                 variant: "destructive",
             });
             return;
@@ -80,19 +99,23 @@ const PadelBooking = () => {
             match_time_end: endTime,
             reservation_opens: reservationOpenDate?.toISOString(),
             user_id: user?.id,
+            partners,
         });
 
         toast({
-            title: "Réservation validée !",
-            description: "Ceci est une simulation. Aucune vraie réservation n'a été faite.",
+            title: "Pré-réservation validée !",
+            description: "Votre demande avec vos partenaires a bien été enregistrée. Ceci est une simulation.",
         });
         setStartTime('');
         setEndTime('');
+        setPartners(['', '', '']);
+        setIsPartnerModalOpen(false);
         setIsSubmitting(false);
     };
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">
+            
             <header className="text-center mb-8 relative">
                 <h1 className="text-4xl font-bold text-primary">PadelBooking</h1>
                 <p className="text-muted-foreground">Réservez votre terrain de padel en un clic.</p>
@@ -110,6 +133,7 @@ const PadelBooking = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 <div className="space-y-6">
+                    
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><CalendarIcon className="w-5 h-5" /> 1. Choisissez une date</CardTitle>
@@ -128,6 +152,7 @@ const PadelBooking = () => {
                 </div>
                 
                 <div className="space-y-6">
+                    
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Layers className="w-5 h-5" /> 2. Terrain souhaité</CardTitle>
@@ -214,10 +239,41 @@ const PadelBooking = () => {
                                     </p>
                                 )}
 
-                                <Button className="w-full mt-4" onClick={handleBooking} disabled={isSubmitting || isBookingAlreadyOpen}>
-                                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                    Valider cette pré-réservation
-                                </Button>
+                                <Dialog open={isPartnerModalOpen} onOpenChange={setIsPartnerModalOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button className="w-full mt-4" disabled={isBookingAlreadyOpen}>
+                                            <Send className="mr-2 h-4 w-4" />
+                                            Valider cette pré-réservation
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Renseigner les partenaires</DialogTitle>
+                                            <DialogDescription>
+                                                Veuillez renseigner le nom complet de vos 3 partenaires (ex: Jean-Phillipe BERNE). Le nom doit être exact pour que la réservation fonctionne.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4">
+                                            {[0, 1, 2].map((i) => (
+                                                <div key={i} className="space-y-2">
+                                                    <Label htmlFor={`partner${i + 1}`}>Partenaire {i + 1}</Label>
+                                                    <Input
+                                                        id={`partner${i + 1}`}
+                                                        value={partners[i]}
+                                                        onChange={(e) => handlePartnerChange(i, e.target.value)}
+                                                        placeholder="Prénom NOM"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <DialogFooter>
+                                            <Button onClick={submitBooking} disabled={isSubmitting}>
+                                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                                Confirmer la pré-réservation
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </CardContent>
                         </Card>
                     )}
