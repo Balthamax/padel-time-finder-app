@@ -31,6 +31,7 @@ const PadelBooking = () => {
         { first_name: '', last_name: '' },
         { first_name: '', last_name: '' },
         { first_name: '', last_name: '' },
+        { first_name: '', last_name: '' },
     ]);
     const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
     const [bookings, setBookings] = useState<Tables<'bookings'>[]>([]);
@@ -196,7 +197,7 @@ const PadelBooking = () => {
                 return;
             }
             
-            const formattedPartners = partners.map(p => `${p.first_name.trim()} ${p.last_name.trim()}`;
+            const formattedPartners = partners.map(p => `${p.first_name.trim()} ${p.last_name.trim()}`);
 
             const { data: newBooking, error } = await supabase
                 .from('bookings')
