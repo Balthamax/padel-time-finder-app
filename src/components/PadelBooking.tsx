@@ -242,8 +242,8 @@ const PadelBooking = () => {
                                 <Dialog open={isPartnerModalOpen} onOpenChange={setIsPartnerModalOpen}>
                                     <DialogTrigger asChild>
                                         <Button className="w-full mt-4" disabled={isBookingAlreadyOpen}>
-                                            <Send className="mr-2 h-4 w-4" />
-                                            Valider cette pré-réservation
+                                            <UserIcon className="mr-2 h-4 w-4" />
+                                            Renseigner le nom de vos partenaires
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent>
