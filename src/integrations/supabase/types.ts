@@ -80,7 +80,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_booking_conflict: {
+        Args: {
+          p_court_number: number
+          p_match_date: string
+          p_start_time: string
+          p_end_time: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       booking_status: "pending" | "confirmed" | "failed"

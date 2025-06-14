@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -89,39 +90,74 @@ const PadelBooking = () => {
         }
 
         setIsSubmitting(true);
-
-        const { error } = await supabase
-            .from('bookings')
-            .insert({
-                court_number: parseInt(selectedCourt, 10),
-                match_date: format(date, 'yyyy-MM-dd'),
-                start_time: startTime,
-                end_time: endTime,
-                partners: partners,
-                user_id: user.id,
-                reservation_opens_at: reservationOpenDate?.toISOString() || null,
+        
+        try {
+            const { data: isConflict, error: conflictError } = await supabase.rpc('check_booking_conflict', {
+                p_court_number: parseInt(selectedCourt, 10),
+                p_match_date: format(date, 'yyyy-MM-dd'),
+                p_start_time: startTime,
+                p_end_time: endTime,
             });
 
-        if (error) {
-            setIsSubmitting(false);
-            console.error('Error inserting booking:', error);
+            if (conflictError) {
+                console.error('Error checking booking conflict:', conflictError);
+                toast({
+                    title: "Erreur lors de la vérification",
+                    description: "Impossible de vérifier la disponibilité du créneau. Veuillez réessayer.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            if (isConflict) {
+                toast({
+                    title: "Créneau non disponible",
+                    description: "Ce créneau a déjà été demandé par un autre utilisateur de l'application.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            const { error } = await supabase
+                .from('bookings')
+                .insert({
+                    court_number: parseInt(selectedCourt, 10),
+                    match_date: format(date, 'yyyy-MM-dd'),
+                    start_time: startTime,
+                    end_time: endTime,
+                    partners: partners,
+                    user_id: user.id,
+                    reservation_opens_at: reservationOpenDate?.toISOString() || null,
+                });
+
+            if (error) {
+                console.error('Error inserting booking:', error);
+                toast({
+                    title: "Erreur lors de la réservation",
+                    description: "Une erreur est survenue, votre demande n'a pas pu être enregistrée. Veuillez réessayer.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
             toast({
-                title: "Erreur lors de la réservation",
-                description: "Une erreur est survenue, votre demande n'a pas pu être enregistrée. Veuillez réessayer.",
+                title: "Pré-réservation validée !",
+                description: "Votre demande avec vos partenaires a bien été enregistrée.",
+            });
+            setStartTime('');
+            setEndTime('');
+            setPartners(['', '', '']);
+            setIsPartnerModalOpen(false);
+        } catch (e) {
+            console.error("An unexpected error occurred:", e);
+            toast({
+                title: "Erreur inattendue",
+                description: "Une erreur inattendue est survenue. Veuillez réessayer.",
                 variant: "destructive",
             });
-            return;
+        } finally {
+            setIsSubmitting(false);
         }
-
-        toast({
-            title: "Pré-réservation validée !",
-            description: "Votre demande avec vos partenaires a bien été enregistrée.",
-        });
-        setStartTime('');
-        setEndTime('');
-        setPartners(['', '', '']);
-        setIsPartnerModalOpen(false);
-        setIsSubmitting(false);
     };
 
     return (
