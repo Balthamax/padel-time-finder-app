@@ -1,4 +1,3 @@
-
 import {
     Dialog,
     DialogContent,
@@ -39,7 +38,7 @@ const RacingCredentialsModal = ({
                 <DialogHeader>
                     <DialogTitle>Informations de connexion Racing</DialogTitle>
                     <DialogDescription>
-                        Ces informations sont nécessaires car la réservation du créneau se fait automatiquement via une connexion à votre portail de réservation. Elles seront enregistrées pour vos prochaines réservations.
+                        Ce sont vos identifiants pour vous connecter à votre espace membre du Racing. Ils seront utilisés pour se connecter au <a href="https://lagardereparisracing.kirola.fr/users/sign_in" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">site de réservation du club</a> et y effectuer la réservation automatiquement. Vos identifiants seront enregistrés de manière sécurisée pour vos prochaines utilisations.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
