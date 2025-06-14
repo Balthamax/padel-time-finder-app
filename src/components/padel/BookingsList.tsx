@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ListChecks, X } from 'lucide-react';
+import { Loader2, ListChecks, Trash2 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 import { Button } from '../ui/button';
 import {
@@ -80,7 +81,7 @@ const BookingsList = ({ bookings, isLoading, onCancelBooking }: BookingsListProp
                                         </div>
                                         {booking.status === 'pending' && (
                                             <Button variant="ghost" size="icon" onClick={() => setBookingToCancel(booking.id)} disabled={cancellingId !== null} title="Annuler la pré-réservation">
-                                                <X className="h-5 w-5 text-destructive" />
+                                                <Trash2 className="h-5 w-5 text-destructive" />
                                             </Button>
                                         )}
                                     </div>
