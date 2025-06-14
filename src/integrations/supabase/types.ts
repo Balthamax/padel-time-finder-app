@@ -16,7 +16,9 @@ export type Database = {
           end_time: string
           id: string
           match_date: string
-          partners: string[]
+          partner_1: string | null
+          partner_2: string | null
+          partner_3: string | null
           reservation_opens_at: string | null
           start_time: string
           status: Database["public"]["Enums"]["booking_status"]
@@ -28,7 +30,9 @@ export type Database = {
           end_time: string
           id?: string
           match_date: string
-          partners: string[]
+          partner_1?: string | null
+          partner_2?: string | null
+          partner_3?: string | null
           reservation_opens_at?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -40,7 +44,9 @@ export type Database = {
           end_time?: string
           id?: string
           match_date?: string
-          partners?: string[]
+          partner_1?: string | null
+          partner_2?: string | null
+          partner_3?: string | null
           reservation_opens_at?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["booking_status"]

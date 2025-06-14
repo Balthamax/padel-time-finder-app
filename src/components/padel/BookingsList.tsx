@@ -30,7 +30,7 @@ const statusColor: { [key in Tables<'bookings'>['status']]: string } = {
 };
 
 interface BookingsListProps {
-    bookings: Tables<'bookings'>[];
+    bookings: (Tables<'bookings'> & { partner_1: string | null, partner_2: string | null, partner_3: string | null })[];
     isLoading: boolean;
     onCancelBooking: (bookingId: string) => Promise<void>;
 }
@@ -62,7 +62,9 @@ const BookingsList = ({ bookings, isLoading, onCancelBooking }: BookingsListProp
                 ) : (
                     <>
                         <ul className="space-y-4">
-                            {bookings.map((booking) => (
+                            {bookings.map((booking) => {
+                                const bookingPartners = [booking.partner_1, booking.partner_2, booking.partner_3].filter(p => p).join(', ');
+                                return (
                                 <li key={booking.id} className="border p-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors hover:bg-muted/50">
                                     <div className="flex-grow">
                                         <p className="font-semibold">
@@ -72,7 +74,7 @@ const BookingsList = ({ bookings, isLoading, onCancelBooking }: BookingsListProp
                                             De {booking.start_time.slice(0, 5)} à {booking.end_time.slice(0, 5)}
                                         </p>
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Avec : {booking.partners.join(', ')}
+                                            Avec : {bookingPartners}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -86,7 +88,7 @@ const BookingsList = ({ bookings, isLoading, onCancelBooking }: BookingsListProp
                                         )}
                                     </div>
                                 </li>
-                            ))}
+                            )})}
                         </ul>
                         <AlertDialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
                             <AlertDialogContent>

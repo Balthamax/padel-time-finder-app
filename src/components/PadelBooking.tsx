@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
@@ -251,8 +252,6 @@ const PadelBooking = () => {
                 return;
             }
             
-            const formattedPartners = partners.map(p => `${p.first_name.trim()} ${p.last_name.trim()}`);
-
             const { data: newBooking, error } = await supabase
                 .from('bookings')
                 .insert({
@@ -260,7 +259,9 @@ const PadelBooking = () => {
                     match_date: format(date, 'yyyy-MM-dd'),
                     start_time: startTime,
                     end_time: endTime,
-                    partners: formattedPartners,
+                    partner_1: `${partners[0].first_name.trim()} ${partners[0].last_name.trim()}`,
+                    partner_2: `${partners[1].first_name.trim()} ${partners[1].last_name.trim()}`,
+                    partner_3: `${partners[2].first_name.trim()} ${partners[2].last_name.trim()}`,
                     user_id: user.id,
                     reservation_opens_at: reservationOpenDate?.toISOString() || null,
                 })
@@ -283,7 +284,10 @@ const PadelBooking = () => {
                     const dateA = new Date(a.match_date + 'T00:00:00').getTime();
                     const dateB = new Date(b.match_date + 'T00:00:00').getTime();
                     if (dateB !== dateA) return dateB - dateA;
-                    return b.start_time.localeCompare(a.start_time);
+                    if (a.start_time && b.start_time) {
+                       return b.start_time.localeCompare(a.start_time);
+                    }
+                    return 0;
                 }));
             }
 
