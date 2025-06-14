@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -9,10 +8,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
-import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers, User as UserIcon, LogOut, Info } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers, User as UserIcon, LogOut, Info, ListChecks } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,18 @@ const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 });
 
+const statusTranslation: { [key in Tables<'bookings'>['status']]: string } = {
+    pending: 'En attente',
+    confirmed: 'Confirmée',
+    failed: 'Échec',
+};
+
+const statusColor: { [key in Tables<'bookings'>['status']]: string } = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    confirmed: 'bg-green-100 text-green-800',
+    failed: 'bg-red-100 text-red-800',
+};
+
 const PadelBooking = () => {
     const { user, signOut } = useAuth();
     const [profile, setProfile] = useState<{first_name: string, last_name: string} | null>(null);
@@ -34,6 +46,8 @@ const PadelBooking = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [partners, setPartners] = useState<[string, string, string]>(['', '', '']);
     const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+    const [bookings, setBookings] = useState<Tables<'bookings'>[]>([]);
+    const [isLoadingBookings, setIsLoadingBookings] = useState(true);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -47,10 +61,35 @@ const PadelBooking = () => {
                 }
             };
             fetchProfile();
+
+            const fetchBookings = async () => {
+                setIsLoadingBookings(true);
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('match_date', { ascending: false })
+                    .order('start_time', { ascending: false });
+
+                if (error) {
+                    console.error("Error fetching bookings", error);
+                    toast({
+                        title: "Erreur",
+                        description: "Impossible de charger vos réservations.",
+                        variant: "destructive"
+                    });
+                } else if (data) {
+                    setBookings(data);
+                }
+                setIsLoadingBookings(false);
+            };
+            fetchBookings();
         } else {
             setProfile(null);
+            setBookings([]);
+            setIsLoadingBookings(false);
         }
-    }, [user]);
+    }, [user, toast]);
 
     useEffect(() => {
         setStartTime('');
@@ -118,7 +157,7 @@ const PadelBooking = () => {
                 return;
             }
 
-            const { error } = await supabase
+            const { data: newBooking, error } = await supabase
                 .from('bookings')
                 .insert({
                     court_number: parseInt(selectedCourt, 10),
@@ -128,7 +167,9 @@ const PadelBooking = () => {
                     partners: partners,
                     user_id: user.id,
                     reservation_opens_at: reservationOpenDate?.toISOString() || null,
-                });
+                })
+                .select()
+                .single();
 
             if (error) {
                 console.error('Error inserting booking:', error);
@@ -137,7 +178,17 @@ const PadelBooking = () => {
                     description: "Une erreur est survenue, votre demande n'a pas pu être enregistrée. Veuillez réessayer.",
                     variant: "destructive",
                 });
+                setIsSubmitting(false); // also set submitting to false here
                 return;
+            }
+            
+            if (newBooking) {
+                setBookings(prevBookings => [newBooking, ...prevBookings].sort((a, b) => {
+                    const dateA = new Date(a.match_date + 'T00:00:00').getTime();
+                    const dateB = new Date(b.match_date + 'T00:00:00').getTime();
+                    if (dateB !== dateA) return dateB - dateA;
+                    return b.start_time.localeCompare(a.start_time);
+                }));
             }
 
             toast({
@@ -331,6 +382,43 @@ const PadelBooking = () => {
                     )}
                 </div>
             </div>
+
+            <Card className="mt-8">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><ListChecks className="w-5 h-5" /> Mes pré-réservations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {isLoadingBookings ? (
+                        <div className="flex justify-center items-center h-24">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : bookings.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">Vous n'avez aucune pré-réservation pour le moment.</p>
+                    ) : (
+                        <ul className="space-y-4">
+                            {bookings.map((booking) => (
+                                <li key={booking.id} className="border p-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors hover:bg-muted/50">
+                                    <div className="flex-grow">
+                                        <p className="font-semibold">
+                                            Padel {booking.court_number} - {format(new Date(booking.match_date + 'T00:00:00'), 'eeee dd MMMM yyyy', { locale: fr })}
+                                        </p>
+                                        <p className="text-sm">
+                                            De {booking.start_time.slice(0, 5)} à {booking.end_time.slice(0, 5)}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Avec : {booking.partners.join(', ')}
+                                        </p>
+                                    </div>
+                                    <div className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColor[booking.status]}`}>
+                                        {statusTranslation[booking.status]}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </CardContent>
+            </Card>
+
              <footer className="text-center mt-12 text-sm text-muted-foreground">
                 <p>⚠️ Les données de disponibilité sont simulées. Connectez ce front-end à votre propre API pour des données réelles.</p>
             </footer>
