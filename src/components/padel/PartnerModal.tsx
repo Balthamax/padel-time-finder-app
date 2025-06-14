@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Send } from 'lucide-react';
-import type { Partner } from "../PadelBooking";
+import type { Partner } from "@/hooks/usePadelBooking";
 
 interface PartnerModalProps {
     isOpen: boolean;
