@@ -89,7 +89,8 @@ const PadelBooking = () => {
 
     const handlePartnerChange = (index: number, field: 'first_name' | 'last_name', value: string) => {
         const newPartners = [...partners] as [Partner, Partner, Partner];
-        newPartners[index] = { ...newPartners[index], [field]: value };
+        const processedValue = field === 'last_name' ? value.toUpperCase() : value;
+        newPartners[index] = { ...newPartners[index], [field]: processedValue };
         setPartners(newPartners);
     };
 
