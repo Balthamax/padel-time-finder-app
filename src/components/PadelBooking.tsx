@@ -367,7 +367,7 @@ const PadelBooking = () => {
             <BookingsList bookings={bookings} isLoading={isLoadingBookings} onCancelBooking={handleCancelBooking} />
 
              <footer className="text-center mt-12 text-sm text-muted-foreground">
-                <p>Cette plateforme a été développée pour permettre aux copains d'Arkavia d'accéder facilement aux réservations et de découvrir un cas d'usage, parmi tant d'autres, des agents autonomes propulsés par l'intelligence artificielle.</p>
+                <p>Cette plateforme a été développée pour permettre aux copains d'Arkavia.fr d'accéder facilement aux réservations et de découvrir un cas d'usage, parmi tant d'autres, des agents autonomes propulsés par l'intelligence artificielle.</p>
             </footer>
         </div>
     );
