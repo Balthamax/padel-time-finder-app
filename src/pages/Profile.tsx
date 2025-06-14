@@ -17,6 +17,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type ProfileData = {
   first_name: string | null;
@@ -43,6 +53,7 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [cancellingId, setCancellingId] = useState<string | null>(null);
+    const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
@@ -128,23 +139,25 @@ const Profile = () => {
         }
     }
 
-    async function handleCancelBooking(bookingId: string) {
-        if (!user) return;
-        setCancellingId(bookingId);
+    async function handleCancelBooking() {
+        if (!user || !bookingToCancel) return;
+        setCancellingId(bookingToCancel);
 
         const { error } = await supabase
             .from('bookings')
             .delete()
-            .eq('id', bookingId)
+            .eq('id', bookingToCancel)
             .eq('status', 'pending');
 
+        const justCancelledId = bookingToCancel;
         setCancellingId(null);
+        setBookingToCancel(null);
 
         if (error) {
             console.error('Error canceling booking', error);
             toast.error("Une erreur est survenue lors de l'annulation.");
         } else {
-            setBookings(bookings.filter(b => b.id !== bookingId));
+            setBookings(bookings.filter(b => b.id !== justCancelledId));
             toast.success("Pré-réservation annulée avec succès !");
         }
     }
@@ -300,15 +313,11 @@ const Profile = () => {
                                                             <Button 
                                                                 variant="ghost" 
                                                                 size="icon" 
-                                                                onClick={() => handleCancelBooking(booking.id)}
-                                                                disabled={cancellingId === booking.id}
+                                                                onClick={() => setBookingToCancel(booking.id)}
+                                                                disabled={cancellingId !== null}
                                                                 title="Annuler la pré-réservation"
                                                             >
-                                                                {cancellingId === booking.id ? (
-                                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                                ) : (
-                                                                    <XCircle className="h-4 w-4 text-destructive" />
-                                                                )}
+                                                                <XCircle className="h-4 w-4 text-destructive" />
                                                             </Button>
                                                         )}
                                                     </TableCell>
@@ -324,6 +333,23 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
+            <AlertDialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous sûr de vouloir annuler ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Cette action ne peut pas être annulée. Votre pré-réservation sera définitivement supprimée.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Retour</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCancelBooking} disabled={!!cancellingId}>
+                            {cancellingId === bookingToCancel && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Confirmer l'annulation
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </main>
     );
 };
