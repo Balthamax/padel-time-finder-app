@@ -5,7 +5,7 @@ import CourtCard from './padel/CourtCard';
 import TimeCard from './padel/TimeCard';
 import BookingSummary from './padel/BookingSummary';
 import PartnerModal from './padel/PartnerModal';
-import BookingsList from './padel/BookingsList';
+import UserBookingsList from './padel/UserBookingsList';
 import RacingCredentialsModal from './padel/RacingCredentialsModal';
 import { usePadelBooking } from '@/hooks/usePadelBooking';
 
@@ -96,7 +96,7 @@ const PadelBooking = () => {
                 isSubmitting={isSubmitting}
             />
 
-            <BookingsList bookings={bookings} isLoading={isLoadingBookings} onCancelBooking={handleCancelBooking} />
+            <UserBookingsList bookings={bookings} isLoading={isLoadingBookings} onCancelBooking={handleCancelBooking} />
 
              <footer className="text-center mt-12 text-sm text-muted-foreground">
                 <p>Cette plateforme a été développée pour permettre aux copains d'Arkavia.fr d'accéder facilement aux réservations et de découvrir un cas d'usage, parmi tant d'autres, des agents autonomes propulsés par l'intelligence artificielle.</p>
