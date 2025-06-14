@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Loader2, Pencil } from 'lucide-react';
+import { Info, Loader2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
@@ -17,11 +16,13 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type ProfileData = {
   first_name: string | null;
   last_name: string | null;
   racing_id: string | null;
+  racing_password: string | null;
 };
 
 type Booking = Database['public']['Tables']['bookings']['Row'];
@@ -30,6 +31,7 @@ const profileFormSchema = z.object({
   first_name: z.string().min(1, { message: "Le prénom est requis." }),
   last_name: z.string().min(1, { message: "Le nom est requis." }),
   racing_id: z.string().nullable().optional(),
+  racing_password: z.string().nullable().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -47,6 +49,7 @@ const Profile = () => {
             first_name: '',
             last_name: '',
             racing_id: '',
+            racing_password: '',
         },
     });
 
@@ -58,7 +61,7 @@ const Profile = () => {
 
             const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
-                .select('first_name, last_name, racing_id')
+                .select('first_name, last_name, racing_id, racing_password')
                 .eq('id', user.id)
                 .single();
             
@@ -71,6 +74,7 @@ const Profile = () => {
                     first_name: profileData.first_name || '',
                     last_name: profileData.last_name || '',
                     racing_id: profileData.racing_id || '',
+                    racing_password: profileData.racing_password || '',
                 });
             }
 
@@ -103,6 +107,7 @@ const Profile = () => {
                 first_name: data.first_name,
                 last_name: data.last_name,
                 racing_id: data.racing_id || null,
+                racing_password: data.racing_password || null,
                 updated_at: new Date().toISOString(),
             })
             .eq('id', user.id);
@@ -115,6 +120,7 @@ const Profile = () => {
                 first_name: data.first_name,
                 last_name: data.last_name,
                 racing_id: data.racing_id || null,
+                racing_password: data.racing_password || null,
             });
             setIsEditing(false);
             toast.success("Profil mis à jour avec succès !");
@@ -156,6 +162,7 @@ const Profile = () => {
                                         <p><strong>Prénom:</strong> {profile?.first_name || 'Non renseigné'}</p>
                                         <p><strong>Nom:</strong> {profile?.last_name || 'Non renseigné'}</p>
                                         <p><strong>ID Racing:</strong> {profile?.racing_id || 'Non renseigné'}</p>
+                                        <p><strong>Password Racing:</strong> {profile?.racing_password ? '********' : 'Non renseigné'}</p>
                                     </CardContent>
                                 </>
                             ) : (
@@ -204,6 +211,26 @@ const Profile = () => {
                                                     </FormItem>
                                                 )}
                                             />
+                                            <FormField
+                                                control={form.control}
+                                                name="racing_password"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Password Racing</FormLabel>
+                                                        <FormControl>
+                                                            <Input type="password" {...field} value={field.value ?? ''} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <Alert>
+                                                <Info className="h-4 w-4" />
+                                                <AlertTitle>Information</AlertTitle>
+                                                <AlertDescription>
+                                                    Nous effectuons les réservations avec votre profil et le mot de passe est nécessaire pour effectuer la réservation. Nous n'utiliserons pas ces données pour autre chose que l'automatisation de la réservation.
+                                                </AlertDescription>
+                                            </Alert>
                                         </CardContent>
                                         <CardFooter className="flex justify-end gap-2">
                                             <Button variant="ghost" type="button" onClick={() => { setIsEditing(false); form.reset(); }}>Annuler</Button>

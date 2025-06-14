@@ -54,6 +54,7 @@ export type Database = {
           id: string
           last_name: string | null
           racing_id: string | null
+          racing_password: string | null
           updated_at: string | null
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           id: string
           last_name?: string | null
           racing_id?: string | null
+          racing_password?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -68,6 +70,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           racing_id?: string | null
+          racing_password?: string | null
           updated_at?: string | null
         }
         Relationships: []
