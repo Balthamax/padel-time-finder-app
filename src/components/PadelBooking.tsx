@@ -24,8 +24,8 @@ export type Partner = {
 const PadelBooking = () => {
     const { user, signOut } = useAuth();
     const [profile, setProfile] = useState<{
-        first_name: string; 
-        last_name: string;
+        first_name: string | null;
+        last_name: string | null;
         racing_id?: string | null;
         racing_password?: string | null;
     } | null>(null);
@@ -200,6 +200,15 @@ const PadelBooking = () => {
             return;
         }
 
+        if (!profile || !profile.first_name || !profile.last_name) {
+            toast({
+                title: "Profil incomplet",
+                description: "Veuillez renseigner votre prénom et votre nom dans la page profil pour continuer.",
+                variant: "destructive",
+            });
+            return;
+        }
+
         setIsSubmitting(true);
         
         try {
@@ -252,9 +261,29 @@ const PadelBooking = () => {
                 return;
             }
             
+            const { count, error: countError } = await supabase
+                .from('bookings')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', user.id);
+            
+            if (countError) {
+                console.error('Error counting user bookings', countError);
+                toast({
+                    title: "Erreur",
+                    description: "Impossible de générer un nom pour la réservation.",
+                    variant: "destructive"
+                });
+                setIsSubmitting(false);
+                return;
+            }
+            
+            const bookingNumber = (count || 0) + 1;
+            const bookingName = `${profile.first_name.charAt(0).toLowerCase()}${profile.last_name.toLowerCase().replace(/\s/g, '')}${bookingNumber}`;
+            
             const { data: newBooking, error } = await supabase
                 .from('bookings')
                 .insert({
+                    name: bookingName,
                     court_number: parseInt(selectedCourt, 10),
                     match_date: format(date, 'yyyy-MM-dd'),
                     start_time: startTime,
