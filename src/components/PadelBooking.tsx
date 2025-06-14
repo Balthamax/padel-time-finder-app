@@ -235,6 +235,7 @@ const PadelBooking = () => {
             setPartners([
                 { first_name: '', last_name: '' },
                 { first_name: '', last_name: '' },
+                { first_name: '', last_name: '' },
             ]);
             setIsPartnerModalOpen(false);
         } catch (e) {
