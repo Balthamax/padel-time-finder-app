@@ -14,6 +14,10 @@ import BookingSummary from './padel/BookingSummary';
 import PartnerModal from './padel/PartnerModal';
 import BookingsList from './padel/BookingsList';
 
+export type Partner = {
+    first_name: string;
+    last_name: string;
+};
 
 const PadelBooking = () => {
     const { user, signOut } = useAuth();
@@ -23,7 +27,11 @@ const PadelBooking = () => {
     const [endTime, setEndTime] = useState('');
     const [selectedCourt, setSelectedCourt] = useState<string>("1");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [partners, setPartners] = useState<[string, string, string]>(['', '', '']);
+    const [partners, setPartners] = useState<[Partner, Partner, Partner]>([
+        { first_name: '', last_name: '' },
+        { first_name: '', last_name: '' },
+        { first_name: '', last_name: '' },
+    ]);
     const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
     const [bookings, setBookings] = useState<Tables<'bookings'>[]>([]);
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
@@ -79,9 +87,9 @@ const PadelBooking = () => {
         setDate(newDate);
     }
 
-    const handlePartnerChange = (index: number, value: string) => {
-        const newPartners = [...partners] as [string, string, string];
-        newPartners[index] = value;
+    const handlePartnerChange = (index: number, field: 'first_name' | 'last_name', value: string) => {
+        const newPartners = [...partners] as [Partner, Partner, Partner];
+        newPartners[index] = { ...newPartners[index], [field]: value };
         setPartners(newPartners);
     };
 
@@ -121,10 +129,10 @@ const PadelBooking = () => {
             return;
         }
 
-        if (partners.some(p => p.trim() === '')) {
+        if (partners.some(p => p.first_name.trim() === '' || p.last_name.trim() === '')) {
             toast({
                 title: "Noms des partenaires manquants",
-                description: "Veuillez renseigner les noms des 3 partenaires.",
+                description: "Veuillez renseigner le prénom et le nom des 3 partenaires.",
                 variant: "destructive",
             });
             return;
@@ -161,6 +169,29 @@ const PadelBooking = () => {
                 return;
             }
 
+            const partnerDataToUpsert = partners.map(p => ({
+                user_id: user.id,
+                first_name: p.first_name.trim(),
+                last_name: p.last_name.trim()
+            }));
+
+            const { error: partnerError } = await supabase.from('partenaires').upsert(partnerDataToUpsert, {
+                onConflict: 'user_id, first_name, last_name'
+            });
+
+            if (partnerError) {
+                console.error('Error upserting partners:', partnerError);
+                toast({
+                    title: "Erreur lors de l'enregistrement des partenaires",
+                    description: "Une erreur est survenue, vos partenaires n'ont pas pu être enregistrés. Veuillez réessayer.",
+                    variant: "destructive",
+                });
+                setIsSubmitting(false);
+                return;
+            }
+            
+            const formattedPartners = partners.map(p => `${p.first_name.trim()} ${p.last_name.trim()}`);
+
             const { data: newBooking, error } = await supabase
                 .from('bookings')
                 .insert({
@@ -168,7 +199,7 @@ const PadelBooking = () => {
                     match_date: format(date, 'yyyy-MM-dd'),
                     start_time: startTime,
                     end_time: endTime,
-                    partners: partners,
+                    partners: formattedPartners,
                     user_id: user.id,
                     reservation_opens_at: reservationOpenDate?.toISOString() || null,
                 })
@@ -201,7 +232,10 @@ const PadelBooking = () => {
             });
             setStartTime('');
             setEndTime('');
-            setPartners(['', '', '']);
+            setPartners([
+                { first_name: '', last_name: '' },
+                { first_name: '', last_name: '' },
+            ]);
             setIsPartnerModalOpen(false);
         } catch (e) {
             console.error("An unexpected error occurred:", e);
