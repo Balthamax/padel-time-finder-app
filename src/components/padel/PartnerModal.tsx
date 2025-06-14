@@ -29,7 +29,7 @@ const PartnerModal = ({
                 <DialogHeader>
                     <DialogTitle>Renseigner les partenaires</DialogTitle>
                     <DialogDescription>
-                        Veuillez renseigner le prénom et le nom de vos 3 partenaires. Ces informations seront enregistrées pour faciliter vos prochaines réservations.
+                        Ces informations serviront à faire les réservations sur la plateforme de réservation du club.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
