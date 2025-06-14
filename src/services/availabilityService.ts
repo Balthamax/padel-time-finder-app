@@ -12,14 +12,40 @@ export const fetchAvailability = async (date: Date, courtId: string): Promise<Ti
   // Simuler une latence réseau
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Générer les créneaux de 07:00 à 21:00
   const slots: TimeSlot[] = [];
-  for (let hour = 7; hour <= 21; hour++) {
-    slots.push({
-      time: `${String(hour).padStart(2, '0')}:00`,
-      // Disponibilité simulée : pour la démo, certains créneaux sont indisponibles aléatoirement.
-      available: Math.random() > 0.3, // 70% de chance d'être disponible
-    });
+
+  // Générer les créneaux en fonction du terrain
+  if (courtId === '2') {
+    // Padel 2: créneaux de 1h de 8h à 21h
+    for (let hour = 8; hour <= 21; hour++) {
+      slots.push({
+        time: `${String(hour).padStart(2, '0')}:00`,
+        available: Math.random() > 0.3, // 70% de chance d'être disponible
+      });
+    }
+  } else if (courtId === '3') {
+    // Padel 3: créneaux de 1h30 de 7h à 21h30
+    // Les créneaux commencent à 7:00, 8:30, 10:00, ..., jusqu'à 20:30
+    const startTimeInMinutes = 7 * 60;
+    const endTimeInMinutes = 20 * 60 + 30; // Le dernier créneau commence à 20:30
+    const slotDurationInMinutes = 90;
+
+    for (let minutes = startTimeInMinutes; minutes <= endTimeInMinutes; minutes += slotDurationInMinutes) {
+        const hour = Math.floor(minutes / 60);
+        const min = minutes % 60;
+        slots.push({
+            time: `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`,
+            available: Math.random() > 0.3, // 70% de chance d'être disponible
+        });
+    }
+  } else {
+    // Padel 1 (et par défaut): créneaux de 1h de 7h à 21h
+    for (let hour = 7; hour <= 21; hour++) {
+      slots.push({
+        time: `${String(hour).padStart(2, '0')}:00`,
+        available: Math.random() > 0.3, // 70% de chance d'être disponible
+      });
+    }
   }
   
   // Rendre certains créneaux spécifiques indisponibles pour la démonstration
@@ -33,7 +59,8 @@ export const fetchAvailability = async (date: Date, courtId: string): Promise<Ti
       unavailableSlots = ['11:00', '18:00', '21:00'];
       break;
     case '3':
-      unavailableSlots = ['09:00', '13:00', '17:00'];
+      // Les créneaux pour le Padel 3 sont 7:00, 8:30, 10:00, 11:30, etc.
+      unavailableSlots = ['10:00', '13:00', '17:30'];
       break;
     default:
       unavailableSlots = ['12:00', '19:00', '20:00'];
