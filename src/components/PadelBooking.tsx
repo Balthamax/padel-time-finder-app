@@ -13,6 +13,7 @@ import TimeCard from './padel/TimeCard';
 import BookingSummary from './padel/BookingSummary';
 import PartnerModal from './padel/PartnerModal';
 import BookingsList from './padel/BookingsList';
+import RacingCredentialsModal from './padel/RacingCredentialsModal';
 
 export type Partner = {
     first_name: string;
@@ -21,7 +22,12 @@ export type Partner = {
 
 const PadelBooking = () => {
     const { user, signOut } = useAuth();
-    const [profile, setProfile] = useState<{first_name: string, last_name: string} | null>(null);
+    const [profile, setProfile] = useState<{
+        first_name: string; 
+        last_name: string;
+        racing_id?: string | null;
+        racing_password?: string | null;
+    } | null>(null);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
@@ -31,10 +37,11 @@ const PadelBooking = () => {
         { first_name: '', last_name: '' },
         { first_name: '', last_name: '' },
         { first_name: '', last_name: '' },
-        { first_name: '', last_name: '' },
-        { first_name: '', last_name: '' },
     ]);
     const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+    const [isRacingModalOpen, setIsRacingModalOpen] = useState(false);
+    const [racingIdInput, setRacingIdInput] = useState('');
+    const [racingPasswordInput, setRacingPasswordInput] = useState('');
     const [bookings, setBookings] = useState<Tables<'bookings'>[]>([]);
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
     const { toast } = useToast();
@@ -42,11 +49,13 @@ const PadelBooking = () => {
     useEffect(() => {
         if (user) {
             const fetchProfile = async () => {
-                const { data, error } = await supabase.from('profiles').select('first_name, last_name').eq('id', user.id).single();
+                const { data, error } = await supabase.from('profiles').select('first_name, last_name, racing_id, racing_password').eq('id', user.id).single();
                 if (error) {
                     console.error("Error fetching profile", error);
                 } else if (data) {
                     setProfile(data);
+                    setRacingIdInput(data.racing_id || '');
+                    // Do not set password input for security
                 }
             };
             fetchProfile();
@@ -121,6 +130,50 @@ const PadelBooking = () => {
                 title: "Pré-réservation annulée",
                 description: "Votre demande a bien été annulée.",
             });
+        }
+    };
+
+    const handleInitiateBooking = () => {
+        if (!profile?.racing_id || !profile?.racing_password) {
+            setIsRacingModalOpen(true);
+        } else {
+            setIsPartnerModalOpen(true);
+        }
+    };
+    
+    const handleRacingCredentialsSubmit = async () => {
+        if (!user || !racingIdInput || !racingPasswordInput) {
+            toast({
+                title: "Champs manquants",
+                description: "Veuillez renseigner votre identifiant et mot de passe Racing.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setIsSubmitting(true);
+        const { error } = await supabase
+            .from('profiles')
+            .update({ racing_id: racingIdInput, racing_password: racingPasswordInput })
+            .eq('id', user.id);
+        
+        setIsSubmitting(false);
+
+        if (error) {
+            console.error('Error updating profile with racing credentials:', error);
+            toast({
+                title: "Erreur",
+                description: "Impossible de sauvegarder vos identifiants Racing.",
+                variant: "destructive"
+            });
+        } else {
+            setProfile(prev => prev ? { ...prev, racing_id: racingIdInput, racing_password: racingPasswordInput } : null);
+            toast({
+                title: "Identifiants enregistrés",
+                description: "Vous pouvez maintenant continuer votre réservation.",
+            });
+            setIsRacingModalOpen(false);
+            setIsPartnerModalOpen(true);
         }
     };
 
@@ -285,11 +338,22 @@ const PadelBooking = () => {
                             selectedCourt={selectedCourt}
                             isBookingAlreadyOpen={isBookingAlreadyOpen}
                             reservationOpenDate={reservationOpenDate}
-                            onOpenPartnerModal={() => setIsPartnerModalOpen(true)}
+                            onOpenPartnerModal={handleInitiateBooking}
                         />
                     )}
                 </div>
             </div>
+
+            <RacingCredentialsModal
+                isOpen={isRacingModalOpen}
+                onOpenChange={setIsRacingModalOpen}
+                racingId={racingIdInput}
+                setRacingId={setRacingIdInput}
+                racingPassword={racingPasswordInput}
+                setRacingPassword={setRacingPasswordInput}
+                onSubmit={handleRacingCredentialsSubmit}
+                isSubmitting={isSubmitting}
+            />
 
             <PartnerModal 
                 isOpen={isPartnerModalOpen}
