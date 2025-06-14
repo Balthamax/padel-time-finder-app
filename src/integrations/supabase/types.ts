@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          court_number: number
+          created_at: string
+          end_time: string
+          id: string
+          match_date: string
+          partners: string[]
+          reservation_opens_at: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          user_id: string
+        }
+        Insert: {
+          court_number: number
+          created_at?: string
+          end_time: string
+          id?: string
+          match_date: string
+          partners: string[]
+          reservation_opens_at?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          user_id: string
+        }
+        Update: {
+          court_number?: number
+          created_at?: string
+          end_time?: string
+          id?: string
+          match_date?: string
+          partners?: string[]
+          reservation_opens_at?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           first_name: string | null
@@ -41,7 +80,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status: "pending" | "confirmed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -156,6 +195,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: ["pending", "confirmed", "failed"],
+    },
   },
 } as const

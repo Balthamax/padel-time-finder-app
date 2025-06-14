@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
     const hours = 7 + Math.floor(i / 2);
@@ -69,7 +70,7 @@ const PadelBooking = () => {
     const isBookingAlreadyOpen = reservationOpenDate ? reservationOpenDate < new Date() : false;
     
     const submitBooking = async () => {
-        if (!date || !startTime || !endTime) {
+        if (!date || !startTime || !endTime || !user) {
             toast({
                 title: "Sélection incomplète",
                 description: "Veuillez choisir une date et des heures de début et de fin.",
@@ -89,22 +90,32 @@ const PadelBooking = () => {
 
         setIsSubmitting(true);
 
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const { error } = await supabase
+            .from('bookings')
+            .insert({
+                court_number: parseInt(selectedCourt, 10),
+                match_date: format(date, 'yyyy-MM-dd'),
+                start_time: startTime,
+                end_time: endTime,
+                partners: partners,
+                user_id: user.id,
+                reservation_opens_at: reservationOpenDate?.toISOString() || null,
+            });
 
-        console.log('Booking submitted for:', {
-            court: selectedCourt,
-            match_date: format(date, 'yyyy-MM-dd'),
-            match_time_start: startTime,
-            match_time_end: endTime,
-            reservation_opens: reservationOpenDate?.toISOString(),
-            user_id: user?.id,
-            partners,
-        });
+        if (error) {
+            setIsSubmitting(false);
+            console.error('Error inserting booking:', error);
+            toast({
+                title: "Erreur lors de la réservation",
+                description: "Une erreur est survenue, votre demande n'a pas pu être enregistrée. Veuillez réessayer.",
+                variant: "destructive",
+            });
+            return;
+        }
 
         toast({
             title: "Pré-réservation validée !",
-            description: "Votre demande avec vos partenaires a bien été enregistrée. Ceci est une simulation.",
+            description: "Votre demande avec vos partenaires a bien été enregistrée.",
         });
         setStartTime('');
         setEndTime('');
@@ -123,7 +134,12 @@ const PadelBooking = () => {
                     {user && profile ? (
                         <div className="flex items-center gap-2">
                            <span className="text-sm hidden sm:inline">Bonjour, {profile.first_name}</span>
-                           <Button variant="ghost" size="icon" onClick={signOut}>
+                            <Button asChild variant="ghost" size="icon" title="Mon profil">
+                                <Link to="/profile">
+                                    <UserIcon className="h-5 w-5" />
+                                </Link>
+                            </Button>
+                           <Button variant="ghost" size="icon" onClick={signOut} title="Déconnexion">
                                <LogOut className="h-5 w-5" />
                            </Button>
                         </div>
