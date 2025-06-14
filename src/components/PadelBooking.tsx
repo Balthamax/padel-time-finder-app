@@ -26,11 +26,11 @@ const PadelBooking = () => {
             setIsLoading(true);
             setSlots([]);
             setSelectedSlot(undefined);
-            fetchAvailability(date)
+            fetchAvailability(date, selectedCourt)
                 .then(setSlots)
                 .finally(() => setIsLoading(false));
         }
-    }, [date]);
+    }, [date, selectedCourt]);
     
     const handleDateChange = (newDate: Date | undefined) => {
         setDate(newDate);
