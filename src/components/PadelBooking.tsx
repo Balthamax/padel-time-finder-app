@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -6,10 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
 import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
+    const hours = 7 + Math.floor(i / 2);
+    const minutes = (i % 2) * 30;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+});
 
 const PadelBooking = () => {
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -120,21 +127,29 @@ const PadelBooking = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="start-time">Heure de début</Label>
-                                        <Input
-                                            id="start-time"
-                                            type="time"
-                                            value={startTime}
-                                            onChange={(e) => setStartTime(e.target.value)}
-                                        />
+                                        <Select onValueChange={setStartTime} value={startTime}>
+                                            <SelectTrigger id="start-time">
+                                                <SelectValue placeholder="HH:MM" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {timeSlots.map(slot => (
+                                                    <SelectItem key={`start-${slot}`} value={slot}>{slot}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <div>
                                         <Label htmlFor="end-time">Heure de fin</Label>
-                                        <Input
-                                            id="end-time"
-                                            type="time"
-                                            value={endTime}
-                                            onChange={(e) => setEndTime(e.target.value)}
-                                        />
+                                        <Select onValueChange={setEndTime} value={endTime}>
+                                            <SelectTrigger id="end-time">
+                                                <SelectValue placeholder="HH:MM" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {timeSlots.map(slot => (
+                                                    <SelectItem key={`end-${slot}`} value={slot}>{slot}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
                             </div>
