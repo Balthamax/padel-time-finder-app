@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Info, Loader2, Pencil } from 'lucide-react';
+import { Info, Loader2, Pencil, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
@@ -42,6 +42,7 @@ const Profile = () => {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
+    const [cancellingId, setCancellingId] = useState<string | null>(null);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
@@ -126,6 +127,28 @@ const Profile = () => {
             toast.success("Profil mis à jour avec succès !");
         }
     }
+
+    async function handleCancelBooking(bookingId: string) {
+        if (!user) return;
+        setCancellingId(bookingId);
+
+        const { error } = await supabase
+            .from('bookings')
+            .delete()
+            .eq('id', bookingId)
+            .eq('status', 'pending');
+
+        setCancellingId(null);
+
+        if (error) {
+            console.error('Error canceling booking', error);
+            toast.error("Une erreur est survenue lors de l'annulation.");
+        } else {
+            setBookings(bookings.filter(b => b.id !== bookingId));
+            toast.success("Pré-réservation annulée avec succès !");
+        }
+    }
+
 
     if (loading) {
         return (
@@ -258,6 +281,7 @@ const Profile = () => {
                                                 <TableHead className="hidden sm:table-cell">Créneau</TableHead>
                                                 <TableHead>Terrain</TableHead>
                                                 <TableHead>Statut</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -270,6 +294,23 @@ const Profile = () => {
                                                         <Badge variant={booking.status === 'pending' ? 'secondary' : booking.status === 'confirmed' ? 'default' : 'destructive'}>
                                                             {booking.status}
                                                         </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {booking.status === 'pending' && (
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                onClick={() => handleCancelBooking(booking.id)}
+                                                                disabled={cancellingId === booking.id}
+                                                                title="Annuler la pré-réservation"
+                                                            >
+                                                                {cancellingId === booking.id ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <XCircle className="h-4 w-4 text-destructive" />
+                                                                )}
+                                                            </Button>
+                                                        )}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

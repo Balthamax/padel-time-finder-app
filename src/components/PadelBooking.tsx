@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
@@ -84,6 +83,29 @@ const PadelBooking = () => {
         const newPartners = [...partners] as [string, string, string];
         newPartners[index] = value;
         setPartners(newPartners);
+    };
+
+    const handleCancelBooking = async (bookingId: string) => {
+        const { error } = await supabase
+            .from('bookings')
+            .delete()
+            .eq('id', bookingId)
+            .eq('status', 'pending');
+
+        if (error) {
+            console.error('Error canceling booking:', error);
+            toast({
+                title: "Erreur lors de l'annulation",
+                description: "Votre demande n'a pas pu être traitée. Veuillez réessayer.",
+                variant: "destructive",
+            });
+        } else {
+            setBookings(bookings.filter(b => b.id !== bookingId));
+            toast({
+                title: "Pré-réservation annulée",
+                description: "Votre demande a bien été annulée.",
+            });
+        }
     };
 
     const reservationOpenDate = date ? calculateReservationOpenDate(date) : null;
@@ -235,7 +257,7 @@ const PadelBooking = () => {
                 isSubmitting={isSubmitting}
             />
 
-            <BookingsList bookings={bookings} isLoading={isLoadingBookings} />
+            <BookingsList bookings={bookings} isLoading={isLoadingBookings} onCancelBooking={handleCancelBooking} />
 
              <footer className="text-center mt-12 text-sm text-muted-foreground">
                 <p>⚠️ Les données de disponibilité sont simulées. Connectez ce front-end à votre propre API pour des données réelles.</p>

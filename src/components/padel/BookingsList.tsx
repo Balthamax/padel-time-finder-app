@@ -1,9 +1,11 @@
 
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ListChecks } from 'lucide-react';
+import { Loader2, ListChecks, XCircle } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
+import { Button } from '../ui/button';
 
 const statusTranslation: { [key in Tables<'bookings'>['status']]: string } = {
     pending: 'En attente',
@@ -20,9 +22,18 @@ const statusColor: { [key in Tables<'bookings'>['status']]: string } = {
 interface BookingsListProps {
     bookings: Tables<'bookings'>[];
     isLoading: boolean;
+    onCancelBooking: (bookingId: string) => Promise<void>;
 }
 
-const BookingsList = ({ bookings, isLoading }: BookingsListProps) => {
+const BookingsList = ({ bookings, isLoading, onCancelBooking }: BookingsListProps) => {
+    const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+    const handleCancel = async (id: string) => {
+        setCancellingId(id);
+        await onCancelBooking(id);
+        setCancellingId(null);
+    };
+
     return (
         <Card className="mt-8">
             <CardHeader>
@@ -50,8 +61,19 @@ const BookingsList = ({ bookings, isLoading }: BookingsListProps) => {
                                         Avec : {booking.partners.join(', ')}
                                     </p>
                                 </div>
-                                <div className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColor[booking.status]}`}>
-                                    {statusTranslation[booking.status]}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <div className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColor[booking.status]}`}>
+                                        {statusTranslation[booking.status]}
+                                    </div>
+                                    {booking.status === 'pending' && (
+                                        <Button variant="ghost" size="icon" onClick={() => handleCancel(booking.id)} disabled={cancellingId === booking.id} title="Annuler la pré-réservation">
+                                            {cancellingId === booking.id ? (
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                            ) : (
+                                                <XCircle className="h-5 w-5 text-destructive" />
+                                            )}
+                                        </Button>
+                                    )}
                                 </div>
                             </li>
                         ))}
