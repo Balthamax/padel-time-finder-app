@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -9,8 +8,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
-import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, Send, Layers, User as UserIcon, LogOut } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from '@/contexts/AuthContext';
+import { AuthPopup } from './AuthPopup';
+import { supabase } from '@/integrations/supabase/client';
 
 const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
     const hours = 7 + Math.floor(i / 2);
@@ -19,12 +21,31 @@ const timeSlots = Array.from({ length: (22 - 7) * 2 + 1 }, (_, i) => {
 });
 
 const PadelBooking = () => {
+    const { user, signOut } = useAuth();
+    const [profile, setProfile] = useState<{first_name: string, last_name: string} | null>(null);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [selectedCourt, setSelectedCourt] = useState<string>("1");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (user) {
+            const fetchProfile = async () => {
+                const { data, error } = await supabase.from('profiles').select('first_name, last_name').eq('id', user.id).single();
+                if (error) {
+                    console.error("Error fetching profile", error);
+                } else if (data) {
+                    setProfile(data);
+                }
+            };
+            fetchProfile();
+        } else {
+            setProfile(null);
+        }
+    }, [user]);
 
     useEffect(() => {
         setStartTime('');
@@ -36,7 +57,7 @@ const PadelBooking = () => {
     }
 
     const reservationOpenDate = date ? calculateReservationOpenDate(date) : null;
-
+    
     const handleBooking = async () => {
         if (!date || !startTime || !endTime) {
             toast({
@@ -58,6 +79,7 @@ const PadelBooking = () => {
             match_time_start: startTime,
             match_time_end: endTime,
             reservation_opens: reservationOpenDate?.toISOString(),
+            user_id: user?.id,
         });
 
         toast({
@@ -68,12 +90,34 @@ const PadelBooking = () => {
         setEndTime('');
         setIsSubmitting(false);
     };
+    
+    const handleBookingClick = () => {
+      if (!user) {
+        setIsAuthPopupOpen(true);
+      } else {
+        handleBooking();
+      }
+    };
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">
-            <header className="text-center mb-8">
+            <header className="text-center mb-8 relative">
                 <h1 className="text-4xl font-bold text-primary">PadelBooking</h1>
                 <p className="text-muted-foreground">Réservez votre terrain de padel en un clic.</p>
+                <div className="absolute top-0 right-0">
+                    {user && profile ? (
+                        <div className="flex items-center gap-2">
+                           <span className="text-sm hidden sm:inline">Bonjour, {profile.first_name}</span>
+                           <Button variant="ghost" size="icon" onClick={signOut}>
+                               <LogOut className="h-5 w-5" />
+                           </Button>
+                        </div>
+                    ) : (
+                        <Button variant="outline" onClick={() => setIsAuthPopupOpen(true)}>
+                            <UserIcon className="mr-2 h-4 w-4" /> Se connecter
+                        </Button>
+                    )}
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -168,7 +212,7 @@ const PadelBooking = () => {
                                         Ouverture de la réservation le {format(reservationOpenDate, "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
                                     </p>
                                 )}
-                                <Button className="w-full mt-4" onClick={handleBooking} disabled={isSubmitting}>
+                                <Button className="w-full mt-4" onClick={handleBookingClick} disabled={isSubmitting}>
                                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                     Valider cette réservation
                                 </Button>
@@ -180,6 +224,7 @@ const PadelBooking = () => {
              <footer className="text-center mt-12 text-sm text-muted-foreground">
                 <p>⚠️ Les données de disponibilité sont simulées. Connectez ce front-end à votre propre API pour des données réelles.</p>
             </footer>
+            <AuthPopup open={isAuthPopupOpen} onOpenChange={setIsAuthPopupOpen} onSuccess={handleBooking} />
         </div>
     );
 }
