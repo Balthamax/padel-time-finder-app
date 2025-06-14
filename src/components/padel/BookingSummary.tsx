@@ -30,7 +30,7 @@ const BookingSummary = ({
             <CardHeader><CardTitle>Résumé de la réservation</CardTitle></CardHeader>
             <CardContent className="space-y-3">
                 <p><strong>Terrain :</strong> Padel {selectedCourt}</p>
-                <p><strong>Date :</strong> {format(date, 'dd/MM/yyyy')}</p>
+                <p><strong>Date :</strong> {format(date, 'yyyy-MM-dd')}</p>
                 <p><strong>Heure :</strong> de {startTime} à {endTime}</p>
                 
                 {isBookingAlreadyOpen ? (
