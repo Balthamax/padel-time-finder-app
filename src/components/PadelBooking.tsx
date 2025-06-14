@@ -89,7 +89,12 @@ const PadelBooking = () => {
 
     const handlePartnerChange = (index: number, field: 'first_name' | 'last_name', value: string) => {
         const newPartners = [...partners] as [Partner, Partner, Partner];
-        const processedValue = field === 'last_name' ? value.toUpperCase() : value;
+        let processedValue = value;
+        if (field === 'last_name') {
+            processedValue = value.toUpperCase();
+        } else if (field === 'first_name' && value) {
+            processedValue = value.charAt(0).toUpperCase() + value.slice(1);
+        }
         newPartners[index] = { ...newPartners[index], [field]: processedValue };
         setPartners(newPartners);
     };
@@ -191,7 +196,7 @@ const PadelBooking = () => {
                 return;
             }
             
-            const formattedPartners = partners.map(p => `${p.first_name.trim()} ${p.last_name.trim()}`);
+            const formattedPartners = partners.map(p => `${p.first_name.trim()} ${p.last_name.trim()}`;
 
             const { data: newBooking, error } = await supabase
                 .from('bookings')
