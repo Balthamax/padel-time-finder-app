@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -9,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { fetchAvailability, TimeSlot } from '@/services/availabilityService';
 import { calculateReservationOpenDate } from '@/utils/dateUtils';
-import { Loader2, Calendar as CalendarIcon, Clock, Link as LinkIcon, Send } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, Send } from 'lucide-react';
 
 const PadelBooking = () => {
     const [date, setDate] = useState<Date | undefined>(new Date());
@@ -17,15 +16,7 @@ const PadelBooking = () => {
     const [selectedSlot, setSelectedSlot] = useState<TimeSlot | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [webhookUrl, setWebhookUrl] = useState('');
     const { toast } = useToast();
-
-    useEffect(() => {
-        const url = localStorage.getItem('padelWebhookUrl');
-        if (url) {
-            setWebhookUrl(url);
-        }
-    }, []);
 
     useEffect(() => {
         if (date) {
@@ -40,12 +31,6 @@ const PadelBooking = () => {
     
     const handleDateChange = (newDate: Date | undefined) => {
         setDate(newDate);
-    }
-
-    const handleWebhookUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newUrl = e.target.value;
-        setWebhookUrl(newUrl);
-        localStorage.setItem('padelWebhookUrl', newUrl);
     }
 
     const reservationOpenDate = date && selectedSlot ? calculateReservationOpenDate(date) : null;
@@ -65,47 +50,23 @@ const PadelBooking = () => {
             return;
         }
 
-        if (!webhookUrl) {
-            toast({
-                title: "Webhook manquant",
-                description: "Veuillez configurer l'URL du webhook.",
-                variant: "destructive",
-            });
-            return;
-        }
-
         setIsSubmitting(true);
 
-        const payload = {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        console.log('Booking submitted for:', {
             match_date: format(date, 'yyyy-MM-dd'),
             match_time: selectedSlot.time,
             reservation_opens: reservationOpenDate?.toISOString(),
-        };
+        });
 
-        try {
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                mode: 'no-cors', 
-            });
-
-            toast({
-                title: "Réservation envoyée !",
-                description: "Votre demande a été envoyée au webhook pour traitement.",
-            });
-            setSelectedSlot(undefined);
-
-        } catch (error) {
-            console.error("Failed to send to webhook", error);
-            toast({
-                title: "Erreur d'envoi",
-                description: "Impossible d'envoyer la demande. Vérifiez l'URL du webhook et la console.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
+        toast({
+            title: "Réservation validée !",
+            description: "Ceci est une simulation. Aucune vraie réservation n'a été faite.",
+        });
+        setSelectedSlot(undefined);
+        setIsSubmitting(false);
     };
 
     return (
@@ -129,21 +90,6 @@ const PadelBooking = () => {
                                 disabled={(d) => d < new Date(new Date().setDate(new Date().getDate() - 1))}
                                 className="rounded-md border"
                                 locale={fr}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><LinkIcon className="w-5 h-5" /> Webhook de réservation</CardTitle>
-                            <CardDescription>Entrez l'URL pour automatiser la réservation.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Input 
-                                type="url" 
-                                placeholder="https://votre-webhook.com/..." 
-                                value={webhookUrl}
-                                onChange={handleWebhookUrlChange}
                             />
                         </CardContent>
                     </Card>
