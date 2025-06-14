@@ -47,31 +47,6 @@ export const fetchAvailability = async (date: Date, courtId: string): Promise<Ti
       });
     }
   }
-  
-  // Rendre certains créneaux spécifiques indisponibles pour la démonstration
-  // en fonction du terrain
-  let unavailableSlots: string[] = [];
-  switch (courtId) {
-    case '1':
-      unavailableSlots = ['12:00', '19:00', '20:00'];
-      break;
-    case '2':
-      unavailableSlots = ['11:00', '18:00', '21:00'];
-      break;
-    case '3':
-      // Les créneaux pour le Padel 3 sont 7:00, 8:30, 10:00, 11:30, etc.
-      unavailableSlots = ['10:00', '13:00', '17:30'];
-      break;
-    default:
-      unavailableSlots = ['12:00', '19:00', '20:00'];
-  }
-
-  slots.forEach(slot => {
-      if (unavailableSlots.includes(slot.time)) {
-          slot.available = false;
-      }
-  });
-
 
   console.log(`Fetched slots for court ${courtId}:`, slots);
   return slots;
