@@ -2,15 +2,21 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 type ProfileData = {
   first_name: string | null;
@@ -20,11 +26,29 @@ type ProfileData = {
 
 type Booking = Database['public']['Tables']['bookings']['Row'];
 
+const profileFormSchema = z.object({
+  first_name: z.string().min(1, { message: "Le prénom est requis." }),
+  last_name: z.string().min(1, { message: "Le nom est requis." }),
+  racing_id: z.string().nullable().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+
 const Profile = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileFormSchema),
+        defaultValues: {
+            first_name: '',
+            last_name: '',
+            racing_id: '',
+        },
+    });
 
     useEffect(() => {
         if (!user) return;
@@ -40,8 +64,14 @@ const Profile = () => {
             
             if (profileError) {
                 console.error('Error fetching profile', profileError);
-            } else {
+                toast.error("Erreur lors de la récupération du profil.");
+            } else if (profileData) {
                 setProfile(profileData);
+                form.reset({
+                    first_name: profileData.first_name || '',
+                    last_name: profileData.last_name || '',
+                    racing_id: profileData.racing_id || '',
+                });
             }
 
             const { data: bookingsData, error: bookingsError } = await supabase
@@ -53,6 +83,7 @@ const Profile = () => {
 
             if (bookingsError) {
                 console.error('Error fetching bookings', bookingsError);
+                toast.error("Erreur lors de la récupération des réservations.");
             } else {
                 setBookings(bookingsData || []);
             }
@@ -61,7 +92,34 @@ const Profile = () => {
         };
 
         fetchData();
-    }, [user]);
+    }, [user, form]);
+
+    async function onSubmit(data: ProfileFormValues) {
+        if (!user) return;
+        
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                first_name: data.first_name,
+                last_name: data.last_name,
+                racing_id: data.racing_id || null,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Error updating profile', error);
+            toast.error("Une erreur est survenue lors de la mise à jour.");
+        } else {
+            setProfile({
+                first_name: data.first_name,
+                last_name: data.last_name,
+                racing_id: data.racing_id || null,
+            });
+            setIsEditing(false);
+            toast.success("Profil mis à jour avec succès !");
+        }
+    }
 
     if (loading) {
         return (
@@ -84,14 +142,79 @@ const Profile = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1">
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Mes informations</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <p><strong>Prénom:</strong> {profile?.first_name || 'Non renseigné'}</p>
-                                <p><strong>Nom:</strong> {profile?.last_name || 'Non renseigné'}</p>
-                                <p><strong>ID Racing:</strong> {profile?.racing_id || 'Non renseigné'}</p>
-                            </CardContent>
+                            {!isEditing ? (
+                                <>
+                                    <CardHeader>
+                                        <div className="flex justify-between items-center">
+                                            <CardTitle>Mes informations</CardTitle>
+                                            <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <p><strong>Prénom:</strong> {profile?.first_name || 'Non renseigné'}</p>
+                                        <p><strong>Nom:</strong> {profile?.last_name || 'Non renseigné'}</p>
+                                        <p><strong>ID Racing:</strong> {profile?.racing_id || 'Non renseigné'}</p>
+                                    </CardContent>
+                                </>
+                            ) : (
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                                        <CardHeader>
+                                            <CardTitle>Modifier mes informations</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <FormField
+                                                control={form.control}
+                                                name="first_name"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Prénom</FormLabel>
+                                                        <FormControl>
+                                                            <Input {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="last_name"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Nom</FormLabel>
+                                                        <FormControl>
+                                                            <Input {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="racing_id"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>ID Racing</FormLabel>
+                                                        <FormControl>
+                                                            <Input {...field} value={field.value ?? ''} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </CardContent>
+                                        <CardFooter className="flex justify-end gap-2">
+                                            <Button variant="ghost" type="button" onClick={() => { setIsEditing(false); form.reset(); }}>Annuler</Button>
+                                            <Button type="submit" disabled={form.formState.isSubmitting}>
+                                                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Sauvegarder
+                                            </Button>
+                                        </CardFooter>
+                                    </form>
+                                </Form>
+                            )}
                         </Card>
                     </div>
                     <div className="lg:col-span-2">
