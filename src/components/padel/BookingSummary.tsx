@@ -40,7 +40,7 @@ const BookingSummary = ({
                         <AlertDescription>
                             PadelBooking permet d'être les premiers sur les réservations pour les créneaux pas encore disponibles. Pour cette date, les réservations sont déjà ouvertes.
                             <br />
-                            <a href="https://lagardereparisracing.kirola.fr/users/sign_in" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
+                            <a href="https://racing-connect.com/booking" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
                                 Réservez directement sur le site du Racing.
                             </a>
                         </AlertDescription>
