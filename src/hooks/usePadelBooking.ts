@@ -117,8 +117,8 @@ export const usePadelBooking = () => {
         } else {
             setBookings(bookings.filter(b => b.id !== bookingId));
             toast({
-                title: "Pré-réservation annulée",
-                description: "Votre demande a bien été annulée.",
+                title: "Demande annulée",
+                description: "Votre demande de réservation a bien été annulée.",
             });
         }
     };
@@ -160,7 +160,7 @@ export const usePadelBooking = () => {
             setProfile(prev => prev ? { ...prev, racing_id: racingIdInput, racing_password: racingPasswordInput } : null);
             toast({
                 title: "Identifiants enregistrés",
-                description: "Vous pouvez maintenant continuer votre réservation.",
+                description: "Vous pouvez maintenant continuer votre demande.",
             });
             setIsRacingModalOpen(false);
             setIsPartnerModalOpen(true);
@@ -201,40 +201,6 @@ export const usePadelBooking = () => {
         setIsSubmitting(true);
         
         try {
-            // Calculer l'heure de fin automatiquement (1h30 après l'heure de début)
-            const [hours, minutes] = startTime.split(':').map(Number);
-            const endHours = hours + 1;
-            const endMinutes = minutes + 30;
-            const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-
-            const { data: isConflict, error: conflictError } = await supabase.rpc('check_booking_conflict', {
-                p_court_number: parseInt(selectedCourt, 10),
-                p_match_date: format(date, 'yyyy-MM-dd'),
-                p_start_time: startTime,
-                p_end_time: endTime,
-            });
-
-            if (conflictError) {
-                console.error('Error checking booking conflict:', conflictError);
-                toast({
-                    title: "Erreur lors de la vérification",
-                    description: "Impossible de vérifier la disponibilité du créneau. Veuillez réessayer.",
-                    variant: "destructive",
-                });
-                 setIsSubmitting(false);
-                return;
-            }
-
-            if (isConflict) {
-                toast({
-                    title: "Créneau non disponible",
-                    description: "Ce créneau a déjà été demandé par un autre utilisateur de l'application.",
-                    variant: "destructive",
-                });
-                 setIsSubmitting(false);
-                return;
-            }
-
             const partnerDataToUpsert = partners.map(p => ({
                 user_id: user.id,
                 first_name: p.first_name.trim(),
@@ -265,7 +231,7 @@ export const usePadelBooking = () => {
                 console.error('Error counting user bookings', countError);
                 toast({
                     title: "Erreur",
-                    description: "Impossible de générer un nom pour la réservation.",
+                    description: "Impossible de générer un nom pour la demande.",
                     variant: "destructive"
                 });
                 setIsSubmitting(false);
@@ -282,7 +248,6 @@ export const usePadelBooking = () => {
                     court_number: parseInt(selectedCourt, 10),
                     match_date: format(date, 'yyyy-MM-dd'),
                     start_time: startTime,
-                    end_time: endTime,
                     partner_1: `${partners[0].first_name.trim()} ${partners[0].last_name.trim()}`,
                     partner_2: `${partners[1].first_name.trim()} ${partners[1].last_name.trim()}`,
                     partner_3: `${partners[2].first_name.trim()} ${partners[2].last_name.trim()}`,
@@ -295,7 +260,7 @@ export const usePadelBooking = () => {
             if (error) {
                 console.error('Error inserting booking:', error);
                 toast({
-                    title: "Erreur lors de la réservation",
+                    title: "Erreur lors de la demande",
                     description: "Une erreur est survenue, votre demande n'a pas pu être enregistrée. Veuillez réessayer.",
                     variant: "destructive",
                 });
@@ -316,8 +281,8 @@ export const usePadelBooking = () => {
             }
 
             toast({
-                title: "Pré-réservation validée !",
-                description: "Votre demande avec vos partenaires a bien été enregistrée.",
+                title: "Demande enregistrée !",
+                description: "Votre demande de réservation a bien été enregistrée.",
             });
             setStartTime('');
             setPartners([

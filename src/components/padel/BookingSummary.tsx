@@ -23,21 +23,13 @@ const BookingSummary = ({
     reservationOpenDate,
     onOpenPartnerModal,
 }: BookingSummaryProps) => {
-    // Calculer l'heure de fin automatiquement (1h30 après l'heure de début)
-    const getEndTime = (start: string) => {
-        const [hours, minutes] = start.split(':').map(Number);
-        const endHours = hours + 1;
-        const endMinutes = minutes + 30;
-        return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-    };
-
     return (
         <Card className="bg-primary/10 border-primary/30 animate-in fade-in-50 duration-500">
-            <CardHeader><CardTitle>Résumé de la réservation</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Résumé de la demande</CardTitle></CardHeader>
             <CardContent className="space-y-3">
                 <p><strong>Terrain :</strong> Padel {selectedCourt}</p>
-                <p><strong>Date :</strong> {format(date, 'yyyy-MM-dd')}</p>
-                <p><strong>Créneau :</strong> {startTime} - {getEndTime(startTime)} (1h30)</p>
+                <p><strong>Date :</strong> {format(date, 'dd/MM/yyyy', { locale: fr })}</p>
+                <p><strong>Heure de début :</strong> {startTime}</p>
                 
                 {isBookingAlreadyOpen ? (
                     <Alert>

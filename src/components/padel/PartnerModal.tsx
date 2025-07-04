@@ -29,7 +29,7 @@ const PartnerModal = ({
                 <DialogHeader>
                     <DialogTitle>Renseigner les partenaires</DialogTitle>
                     <DialogDescription>
-                        Ces informations serviront à faire les réservations sur la plateforme de réservation du club.
+                        Ces informations serviront à enregistrer votre demande de réservation.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -62,7 +62,7 @@ const PartnerModal = ({
                 <DialogFooter>
                     <Button onClick={onSubmit} disabled={isSubmitting}>
                         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                        Confirmer la pré-réservation
+                        Enregistrer la demande
                     </Button>
                 </DialogFooter>
             </DialogContent>
