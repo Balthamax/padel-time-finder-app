@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +23,6 @@ export const usePadelBooking = () => {
     } | null>(null);
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [startTime, setStartTime] = useState('');
-    const [endTime, setEndTime] = useState('');
     const [selectedCourt, setSelectedCourt] = useState<string>("1");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [partners, setPartners] = useState<[Partner, Partner, Partner]>([
@@ -84,7 +82,6 @@ export const usePadelBooking = () => {
 
     useEffect(() => {
         setStartTime('');
-        setEndTime('');
     }, [date, selectedCourt]);
     
     const handleDateChange = (newDate: Date | undefined) => {
@@ -174,10 +171,10 @@ export const usePadelBooking = () => {
     const isBookingAlreadyOpen = reservationOpenDate ? reservationOpenDate < new Date() : false;
     
     const submitBooking = async () => {
-        if (!date || !startTime || !endTime || !user) {
+        if (!date || !startTime || !user) {
             toast({
                 title: "Sélection incomplète",
-                description: "Veuillez choisir une date et des heures de début et de fin.",
+                description: "Veuillez choisir une date et une heure de début.",
                 variant: "destructive",
             });
             return;
@@ -204,6 +201,12 @@ export const usePadelBooking = () => {
         setIsSubmitting(true);
         
         try {
+            // Calculer l'heure de fin automatiquement (1h30 après l'heure de début)
+            const [hours, minutes] = startTime.split(':').map(Number);
+            const endHours = hours + 1;
+            const endMinutes = minutes + 30;
+            const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+
             const { data: isConflict, error: conflictError } = await supabase.rpc('check_booking_conflict', {
                 p_court_number: parseInt(selectedCourt, 10),
                 p_match_date: format(date, 'yyyy-MM-dd'),
@@ -317,7 +320,6 @@ export const usePadelBooking = () => {
                 description: "Votre demande avec vos partenaires a bien été enregistrée.",
             });
             setStartTime('');
-            setEndTime('');
             setPartners([
                 { first_name: '', last_name: '' },
                 { first_name: '', last_name: '' },
@@ -344,8 +346,6 @@ export const usePadelBooking = () => {
         handleDateChange,
         startTime,
         setStartTime,
-        endTime,
-        setEndTime,
         selectedCourt,
         setSelectedCourt,
         isSubmitting,
