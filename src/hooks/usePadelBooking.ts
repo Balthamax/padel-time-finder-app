@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +47,6 @@ export const usePadelBooking = () => {
                 } else if (data) {
                     setProfile(data);
                     setRacingIdInput(data.racing_id || '');
-                    // Do not set password input for security
                 }
             };
             fetchProfile();
@@ -222,6 +222,7 @@ export const usePadelBooking = () => {
                 return;
             }
             
+            // Générer un nom unique pour la demande
             const { count, error: countError } = await supabase
                 .from('bookings')
                 .select('id', { count: 'exact', head: true })
@@ -241,19 +242,22 @@ export const usePadelBooking = () => {
             const bookingNumber = (count || 0) + 1;
             const bookingName = `${profile.first_name.charAt(0).toLowerCase()}${profile.last_name.toLowerCase().replace(/\s/g, '')}${bookingNumber}`;
             
+            // Créer la demande de réservation - en utilisant seulement les champs existants
+            const bookingData = {
+                court_number: parseInt(selectedCourt, 10),
+                match_date: format(date, 'yyyy-MM-dd'),
+                start_time: startTime,
+                end_time: '23:59:59', // Valeur par défaut car le champ est encore requis
+                partner_1: `${partners[0].first_name.trim()} ${partners[0].last_name.trim()}`,
+                partner_2: `${partners[1].first_name.trim()} ${partners[1].last_name.trim()}`,
+                partner_3: `${partners[2].first_name.trim()} ${partners[2].last_name.trim()}`,
+                user_id: user.id,
+                reservation_opens_at: reservationOpenDate?.toISOString() || null,
+            };
+
             const { data: newBooking, error } = await supabase
                 .from('bookings')
-                .insert({
-                    name: bookingName,
-                    court_number: parseInt(selectedCourt, 10),
-                    match_date: format(date, 'yyyy-MM-dd'),
-                    start_time: startTime,
-                    partner_1: `${partners[0].first_name.trim()} ${partners[0].last_name.trim()}`,
-                    partner_2: `${partners[1].first_name.trim()} ${partners[1].last_name.trim()}`,
-                    partner_3: `${partners[2].first_name.trim()} ${partners[2].last_name.trim()}`,
-                    user_id: user.id,
-                    reservation_opens_at: reservationOpenDate?.toISOString() || null,
-                })
+                .insert(bookingData)
                 .select()
                 .single();
 
@@ -278,19 +282,21 @@ export const usePadelBooking = () => {
                     }
                     return 0;
                 }));
+                
+                // Réinitialiser le formulaire
+                setStartTime('');
+                setPartners([
+                    { first_name: '', last_name: '' },
+                    { first_name: '', last_name: '' },
+                    { first_name: '', last_name: '' },
+                ]);
+                setIsPartnerModalOpen(false);
             }
 
             toast({
                 title: "Demande enregistrée !",
-                description: "Votre demande de réservation a bien été enregistrée.",
+                description: `Votre demande de réservation "${bookingName}" a bien été enregistrée.`,
             });
-            setStartTime('');
-            setPartners([
-                { first_name: '', last_name: '' },
-                { first_name: '', last_name: '' },
-                { first_name: '', last_name: '' },
-            ]);
-            setIsPartnerModalOpen(false);
         } catch (e) {
             console.error("An unexpected error occurred:", e);
             toast({
