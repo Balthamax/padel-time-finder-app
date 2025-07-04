@@ -20,8 +20,24 @@ const PageHeader = ({ user, profile, onSignOut }: PageHeaderProps) => {
             <div className="absolute left-0 top-0">
                 <Navigation />
             </div>
-            <h1 className="text-4xl font-bold text-primary">PadelBooking</h1>
-            <p className="text-muted-foreground">Réservez votre terrain de padel en un clic.</p>
+            
+            <div className="flex flex-col items-center">
+                <a 
+                    href="https://arkavia.fr" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="mb-4 hover:opacity-80 transition-opacity"
+                >
+                    <img 
+                        src="/lovable-uploads/2c1d7e27-2350-4111-ae38-71f221901e01.png" 
+                        alt="Logo Arkavia" 
+                        className="h-16 w-auto"
+                    />
+                </a>
+                <h1 className="text-4xl font-bold text-primary">PadelBooking</h1>
+                <p className="text-muted-foreground">Réservez votre terrain de padel en un clic.</p>
+            </div>
+            
             <div className="absolute top-0 right-0">
                 {user && profile ? (
                     <div className="flex items-center gap-2">
