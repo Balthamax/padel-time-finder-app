@@ -39,7 +39,7 @@ const TimeCard = ({ date, startTime, onStartTimeChange, availableSlots, isLoadin
                                 ))
                             ) : (
                                 !isLoadingSlots && date && (
-                                    <SelectItem value="" disabled>
+                                    <SelectItem value="no-slots" disabled>
                                         Aucun créneau disponible
                                     </SelectItem>
                                 )

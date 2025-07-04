@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
@@ -115,19 +114,16 @@ export const usePadelBooking = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Erreur lors de la récupération des disponibilités');
+                throw new Error(`Erreur HTTP: ${response.status}`);
             }
 
             const slots: AvailableSlot[] = await response.json();
-            setAvailableSlots(slots);
+            console.log('Available slots received:', slots);
+            setAvailableSlots(Array.isArray(slots) ? slots : []);
         } catch (error) {
             console.error('Error fetching available slots:', error);
-            toast({
-                title: "Erreur",
-                description: "Impossible de charger les créneaux disponibles.",
-                variant: "destructive"
-            });
             setAvailableSlots([]);
+            // Ne pas afficher de toast d'erreur pour éviter de polluer l'interface
         } finally {
             setIsLoadingSlots(false);
         }
