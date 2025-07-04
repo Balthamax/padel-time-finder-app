@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAdminBookings } from '@/hooks/useAdminBookings';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Users, Calendar } from 'lucide-react';
@@ -14,15 +15,13 @@ import type { Tables } from '@/integrations/supabase/types';
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const { bookings, loading: loadingBookings, cancelBooking } = useAdminBookings();
   const [profiles, setProfiles] = useState<Tables<'profiles'>[]>([]);
-  const [bookings, setBookings] = useState<Tables<'bookings'>[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
-  const [loadingBookings, setLoadingBookings] = useState(true);
 
   useEffect(() => {
     if (isAdmin) {
       fetchProfiles();
-      fetchBookings();
     }
   }, [isAdmin]);
 
@@ -42,25 +41,6 @@ const AdminDashboard = () => {
       console.error('Error fetching profiles:', error);
     } finally {
       setLoadingProfiles(false);
-    }
-  };
-
-  const fetchBookings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .order('match_date', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching bookings:', error);
-      } else {
-        setBookings(data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    } finally {
-      setLoadingBookings(false);
     }
   };
 
@@ -133,7 +113,11 @@ const AdminDashboard = () => {
         </TabsContent>
         
         <TabsContent value="bookings">
-          <AdminBookingsList bookings={bookings} loading={loadingBookings} />
+          <AdminBookingsList 
+            bookings={bookings} 
+            loading={loadingBookings} 
+            onCancelBooking={cancelBooking}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -4,12 +4,14 @@ import { fr } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Clock } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Loader2, Calendar, Clock, Trash2 } from 'lucide-react';
 import type { Tables } from '@/integrations/supabase/types';
 
 interface AdminBookingsListProps {
   bookings: Tables<'bookings'>[];
   loading: boolean;
+  onCancelBooking: (bookingId: string) => void;
 }
 
 const statusVariant = {
@@ -24,7 +26,7 @@ const statusLabel = {
   failed: 'Échec',
 } as const;
 
-const AdminBookingsList = ({ bookings, loading }: AdminBookingsListProps) => {
+const AdminBookingsList = ({ bookings, loading, onCancelBooking }: AdminBookingsListProps) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -56,6 +58,7 @@ const AdminBookingsList = ({ bookings, loading }: AdminBookingsListProps) => {
                   <TableHead>Partenaires</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Créée le</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -74,7 +77,8 @@ const AdminBookingsList = ({ bookings, loading }: AdminBookingsListProps) => {
                       </TableCell>
                       <TableCell className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
+                        {booking.start_time.slice(0, 5)}
+                        {booking.end_time && ` - ${booking.end_time.slice(0, 5)}`}
                       </TableCell>
                       <TableCell className="text-sm max-w-48 truncate" title={partners}>
                         {partners}
@@ -86,6 +90,18 @@ const AdminBookingsList = ({ bookings, loading }: AdminBookingsListProps) => {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(booking.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                      </TableCell>
+                      <TableCell>
+                        {booking.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onCancelBooking(booking.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
