@@ -76,16 +76,16 @@ const BookingWizard = ({
     return (
         <Card className="w-full">
             <CardHeader>
-                <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-                        <Rocket className="w-5 h-5" />
-                        Programmer une réservation
+                <div className="flex items-center justify-between gap-4">
+                    <CardTitle className="flex items-center gap-2 text-xl font-semibold flex-1 min-w-0">
+                        <Rocket className="w-5 h-5 flex-shrink-0" />
+                        <span className="truncate">Programmer une réservation</span>
                     </CardTitle>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={handleReset}
-                        className="h-8 w-8"
+                        className="h-8 w-8 flex-shrink-0"
                         title="Réinitialiser"
                     >
                         <RotateCcw className="w-4 h-4" />
