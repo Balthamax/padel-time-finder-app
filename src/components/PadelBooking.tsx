@@ -2,10 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import PageHeader from './padel/PageHeader';
-import DateCard from './padel/DateCard';
-import CourtCard from './padel/CourtCard';
-import TimeCard from './padel/TimeCard';
-import BookingSummary from './padel/BookingSummary';
+import BookingWizard from './padel/BookingWizard';
 import PartnerModal from './padel/PartnerModal';
 import UserBookingsList from './padel/UserBookingsList';
 import RacingCredentialsModal from './padel/RacingCredentialsModal';
@@ -46,34 +43,47 @@ const PadelBooking = () => {
     } = usePadelBooking();
 
     return (
-        <div className="container mx-auto p-4 max-w-4xl">
-            <PageHeader user={user} profile={profile} onSignOut={signOut} />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                <div className="space-y-6">
-                    <DateCard date={date} onDateChange={handleDateChange} />
+        <div className="min-h-screen flex flex-col bg-background">
+            {/* Header fixe */}
+            <div className="sticky top-0 z-50 bg-background border-b">
+                <div className="container mx-auto p-4 max-w-4xl">
+                    <PageHeader user={user} profile={profile} onSignOut={signOut} />
                 </div>
-                
-                <div className="space-y-6">
-                    <CourtCard selectedCourt={selectedCourt} onCourtChange={setSelectedCourt} />
-                    <TimeCard 
-                        date={date}
-                        startTime={startTime}
-                        onStartTimeChange={setStartTime}
-                        availableSlots={getFilteredTimeSlots()}
-                        isLoadingSlots={isLoadingSlots}
-                    />
+            </div>
 
-                    {startTime && date && (
-                        <BookingSummary
+            {/* Contenu principal scrollable */}
+            <div className="flex-1 overflow-y-auto">
+                <div className="container mx-auto p-4 max-w-2xl">
+                    <div className="space-y-8">
+                        <BookingWizard
                             date={date}
-                            startTime={startTime}
+                            onDateChange={handleDateChange}
                             selectedCourt={selectedCourt}
+                            onCourtChange={setSelectedCourt}
+                            startTime={startTime}
+                            onStartTimeChange={setStartTime}
+                            availableSlots={getFilteredTimeSlots()}
+                            isLoadingSlots={isLoadingSlots}
+                            onSubmit={handleInitiateBooking}
                             isBookingAlreadyOpen={isBookingAlreadyOpen}
                             reservationOpenDate={reservationOpenDate}
-                            onOpenPartnerModal={handleInitiateBooking}
                         />
-                    )}
+
+                        <UserBookingsList 
+                            bookings={bookings} 
+                            isLoading={isLoadingBookings} 
+                            onCancelBooking={handleCancelBooking} 
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer fixe */}
+            <div className="sticky bottom-0 bg-background border-t">
+                <div className="container mx-auto p-4 max-w-4xl">
+                    <footer className="text-center text-sm text-muted-foreground">
+                        <p>Cette plateforme a été développée pour permettre aux copains d'Arkavia.fr d'accéder facilement aux réservations</p>
+                    </footer>
                 </div>
             </div>
 
@@ -96,12 +106,6 @@ const PadelBooking = () => {
                 onSubmit={submitBooking}
                 isSubmitting={isSubmitting}
             />
-
-            <UserBookingsList bookings={bookings} isLoading={isLoadingBookings} onCancelBooking={handleCancelBooking} />
-
-             <footer className="text-center mt-12 text-sm text-muted-foreground">
-                <p>Cette plateforme a été développée pour permettre aux copains d'Arkavia.fr d'accéder facilement aux réservations</p>
-            </footer>
         </div>
     );
 }
