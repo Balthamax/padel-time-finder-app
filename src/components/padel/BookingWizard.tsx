@@ -96,7 +96,7 @@ const BookingWizard = ({
                 {/* Étape 1: Date */}
                 <div className={currentStep === 1 ? '' : 'opacity-75'}>
                     <div className="flex items-center gap-2 mb-3">
-                        <CalendarIcon className="w-5 h-5 text-green-600" />
+                        <CalendarIcon className="w-5 h-5 text-blue-600" />
                         <h3 className="font-semibold">
                             {currentStep === 1 ? '1. Choisissez une date' : (
                                 <button 
@@ -126,7 +126,7 @@ const BookingWizard = ({
                 {currentStep >= 2 && (
                     <div className={currentStep === 2 ? '' : 'opacity-75'}>
                         <div className="flex items-center gap-2 mb-3">
-                            <Layers className="w-5 h-5 text-green-600" />
+                            <Layers className="w-5 h-5 text-blue-600" />
                             <h3 className="font-semibold">
                                 {currentStep === 2 ? '2. Terrain souhaité' : (
                                     <button 
@@ -165,7 +165,7 @@ const BookingWizard = ({
                 {currentStep >= 3 && (
                     <div>
                         <div className="flex items-center gap-2 mb-3">
-                            <Clock className="w-5 h-5 text-green-600" />
+                            <Clock className="w-5 h-5 text-blue-600" />
                             <h3 className="font-semibold">
                                 3. Choisissez un créneau
                                 {isLoadingSlots && <Loader2 className="w-4 h-4 animate-spin inline ml-2" />}
