@@ -45,6 +45,7 @@ export const usePadelBooking = () => {
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
     const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
     const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     // Mapping des court_ids aux numéros de terrains
     const courtIdToNumber: { [key: string]: string } = {
@@ -65,6 +66,28 @@ export const usePadelBooking = () => {
                 }
             };
             fetchProfile();
+
+            // Check if user is admin
+            const checkUserRole = async () => {
+                try {
+                    const { data, error } = await supabase
+                        .from('user_roles')
+                        .select('role')
+                        .eq('user_id', user.id)
+                        .eq('role', 'admin')
+                        .single();
+
+                    if (error && error.code !== 'PGRST116') {
+                        console.error('Error checking user role:', error);
+                    }
+
+                    setIsAdmin(!!data);
+                } catch (error) {
+                    console.error('Error checking user role:', error);
+                    setIsAdmin(false);
+                }
+            };
+            checkUserRole();
 
             const fetchBookings = async () => {
                 setIsLoadingBookings(true);
@@ -92,6 +115,7 @@ export const usePadelBooking = () => {
             setProfile(null);
             setBookings([]);
             setIsLoadingBookings(false);
+            setIsAdmin(false);
         }
     }, [user, toast]);
 
@@ -195,6 +219,19 @@ export const usePadelBooking = () => {
     };
 
     const handleInitiateBooking = () => {
+        // Vérifier si l'utilisateur non-admin a déjà une demande en attente
+        if (!isAdmin) {
+            const hasPendingBooking = bookings.some(booking => booking.status === 'pending');
+            if (hasPendingBooking) {
+                toast({
+                    title: "Demande déjà en cours",
+                    description: "Vous avez déjà une demande de réservation en attente. Veuillez l'annuler avant d'en créer une nouvelle.",
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
+
         if (!profile?.racing_id || !profile?.racing_password) {
             setIsRacingModalOpen(true);
         } else {
@@ -249,6 +286,19 @@ export const usePadelBooking = () => {
                 variant: "destructive",
             });
             return;
+        }
+
+        // Double vérification avant soumission pour les non-admins
+        if (!isAdmin) {
+            const hasPendingBooking = bookings.some(booking => booking.status === 'pending');
+            if (hasPendingBooking) {
+                toast({
+                    title: "Demande déjà en cours",
+                    description: "Vous avez déjà une demande de réservation en attente.",
+                    variant: "destructive",
+                });
+                return;
+            }
         }
 
         if (partners.some(p => p.first_name.trim() === '' || p.last_name.trim() === '')) {
