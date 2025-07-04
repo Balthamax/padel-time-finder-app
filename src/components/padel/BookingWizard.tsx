@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Layers, Clock, Rocket, Loader2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Layers, Clock, Rocket, Loader2, RotateCcw } from 'lucide-react';
 
 interface BookingWizardProps {
     date: Date | undefined;
@@ -60,39 +60,67 @@ const BookingWizard = ({
         onCourtChange(court);
     };
 
+    const handleReset = () => {
+        onDateChange(undefined);
+        onCourtChange('');
+        onStartTimeChange('');
+        setCurrentStep(1);
+    };
+
+    const handleEditStep = (step: number) => {
+        setCurrentStep(step);
+    };
+
     const canShowFinalButton = date && selectedCourt && startTime;
 
     return (
         <Card className="w-full">
             <CardHeader>
-                <CardTitle className="text-center text-xl">
-                    🎯 Programmer une réservation
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                        <Rocket className="w-5 h-5" />
+                        Programmer une réservation
+                    </CardTitle>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleReset}
+                        className="h-8 w-8"
+                        title="Réinitialiser"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Étape 1: Date */}
-                {currentStep >= 1 && (
-                    <div className={currentStep === 1 ? '' : 'opacity-75'}>
-                        <div className="flex items-center gap-2 mb-3">
-                            <CalendarIcon className="w-5 h-5 text-green-600" />
-                            <h3 className="font-semibold">
-                                {currentStep === 1 ? '1. Choisissez une date' : `✅ Date: ${date ? format(date, 'dd/MM/yyyy', { locale: fr }) : ''}`}
-                            </h3>
-                        </div>
-                        {currentStep === 1 && (
-                            <div className="flex justify-center">
-                                <Calendar
-                                    mode="single"
-                                    selected={date}
-                                    onSelect={handleDateSelect}
-                                    disabled={(d) => d < new Date(new Date().setDate(new Date().getDate() - 1))}
-                                    className="rounded-md border"
-                                    locale={fr}
-                                />
-                            </div>
-                        )}
+                <div className={currentStep === 1 ? '' : 'opacity-75'}>
+                    <div className="flex items-center gap-2 mb-3">
+                        <CalendarIcon className="w-5 h-5 text-green-600" />
+                        <h3 className="font-semibold">
+                            {currentStep === 1 ? '1. Choisissez une date' : (
+                                <button 
+                                    onClick={() => handleEditStep(1)}
+                                    className="text-left hover:underline"
+                                >
+                                    Date: {date ? format(date, 'dd/MM/yyyy', { locale: fr }) : ''}
+                                </button>
+                            )}
+                        </h3>
                     </div>
-                )}
+                    {currentStep === 1 && (
+                        <div className="flex justify-center">
+                            <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={handleDateSelect}
+                                disabled={(d) => d < new Date(new Date().setDate(new Date().getDate() - 1))}
+                                className="rounded-md border"
+                                locale={fr}
+                            />
+                        </div>
+                    )}
+                </div>
 
                 {/* Étape 2: Terrain */}
                 {currentStep >= 2 && (
@@ -100,7 +128,14 @@ const BookingWizard = ({
                         <div className="flex items-center gap-2 mb-3">
                             <Layers className="w-5 h-5 text-green-600" />
                             <h3 className="font-semibold">
-                                {currentStep === 2 ? '2. Terrain souhaité' : `✅ Terrain: Padel ${selectedCourt}`}
+                                {currentStep === 2 ? '2. Terrain souhaité' : (
+                                    <button 
+                                        onClick={() => handleEditStep(2)}
+                                        className="text-left hover:underline"
+                                    >
+                                        Terrain: Padel {selectedCourt}
+                                    </button>
+                                )}
                             </h3>
                         </div>
                         {currentStep === 2 && (
