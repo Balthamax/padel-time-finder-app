@@ -1,5 +1,4 @@
 
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import PageHeader from './padel/PageHeader';
@@ -13,9 +12,6 @@ import RacingCredentialsModal from './padel/RacingCredentialsModal';
 import { usePadelBooking } from '@/hooks/usePadelBooking';
 
 const PadelBooking = () => {
-    const { isAdmin, loading: roleLoading } = useUserRole();
-    const navigate = useNavigate();
-    
     const { 
         user, 
         signOut,
@@ -46,18 +42,6 @@ const PadelBooking = () => {
         reservationOpenDate,
         isBookingAlreadyOpen
     } = usePadelBooking();
-
-    // Rediriger les admins vers la page admin
-    useEffect(() => {
-        if (!roleLoading && isAdmin) {
-            navigate('/admin');
-        }
-    }, [isAdmin, roleLoading, navigate]);
-
-    // Ne pas afficher l'interface utilisateur standard pour les admins
-    if (roleLoading || isAdmin) {
-        return null;
-    }
 
     return (
         <div className="container mx-auto p-4 max-w-4xl">

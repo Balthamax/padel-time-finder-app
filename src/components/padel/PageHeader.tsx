@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { User as UserIcon, LogOut } from 'lucide-react';
+import Navigation from "@/components/Navigation";
 import type { User } from '@supabase/supabase-js';
 
 interface PageHeaderProps {
@@ -13,6 +14,9 @@ interface PageHeaderProps {
 const PageHeader = ({ user, profile, onSignOut }: PageHeaderProps) => {
     return (
         <header className="text-center mb-8 relative">
+            <div className="absolute left-0 top-0">
+                <Navigation />
+            </div>
             <h1 className="text-4xl font-bold text-primary">PadelBooking</h1>
             <p className="text-muted-foreground">Réservez votre terrain de padel en un clic.</p>
             <div className="absolute top-0 right-0">
