@@ -40,7 +40,9 @@ const PadelBooking = () => {
         handleRacingCredentialsSubmit,
         submitBooking,
         reservationOpenDate,
-        isBookingAlreadyOpen
+        isBookingAlreadyOpen,
+        getFilteredTimeSlots,
+        isLoadingSlots,
     } = usePadelBooking();
 
     return (
@@ -58,6 +60,8 @@ const PadelBooking = () => {
                         date={date}
                         startTime={startTime}
                         onStartTimeChange={setStartTime}
+                        availableSlots={getFilteredTimeSlots()}
+                        isLoadingSlots={isLoadingSlots}
                     />
 
                     {startTime && date && (

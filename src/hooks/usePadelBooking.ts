@@ -7,6 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 
+export type AvailableSlot = {
+    court_id: string;
+    start_time: string;
+    end_time: string;
+    status: string;
+};
+
 export type Partner = {
     first_name: string;
     last_name: string;
@@ -37,6 +44,15 @@ export const usePadelBooking = () => {
     const [racingPasswordInput, setRacingPasswordInput] = useState('');
     const [bookings, setBookings] = useState<Tables<'bookings'>[]>([]);
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+    const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
+    const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
+    // Mapping des court_ids aux numéros de terrains
+    const courtIdToNumber: { [key: string]: string } = {
+        '1290': '1',
+        '1291': '2', 
+        '1669': '3'
+    };
 
     useEffect(() => {
         if (user) {
@@ -83,6 +99,65 @@ export const usePadelBooking = () => {
     useEffect(() => {
         setStartTime('');
     }, [date, selectedCourt]);
+
+    // Fonction pour récupérer les disponibilités depuis l'API
+    const fetchAvailableSlots = async (selectedDate: Date) => {
+        setIsLoadingSlots(true);
+        try {
+            const response = await fetch('https://workflows.arkavia.fr/webhook-test/3a51fedd-a298-4d68-98f9-f9ffdf997b40', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    selected_date: format(selectedDate, 'yyyy-MM-dd')
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la récupération des disponibilités');
+            }
+
+            const slots: AvailableSlot[] = await response.json();
+            setAvailableSlots(slots);
+        } catch (error) {
+            console.error('Error fetching available slots:', error);
+            toast({
+                title: "Erreur",
+                description: "Impossible de charger les créneaux disponibles.",
+                variant: "destructive"
+            });
+            setAvailableSlots([]);
+        } finally {
+            setIsLoadingSlots(false);
+        }
+    };
+
+    // Récupérer les disponibilités quand la date change
+    useEffect(() => {
+        if (date) {
+            fetchAvailableSlots(date);
+        } else {
+            setAvailableSlots([]);
+        }
+    }, [date]);
+
+    // Filtrer les créneaux selon le terrain sélectionné
+    const getFilteredTimeSlots = () => {
+        if (!availableSlots.length) return [];
+        
+        // Trouver le court_id correspondant au terrain sélectionné
+        const targetCourtId = Object.keys(courtIdToNumber).find(
+            courtId => courtIdToNumber[courtId] === selectedCourt
+        );
+        
+        if (!targetCourtId) return [];
+        
+        return availableSlots
+            .filter(slot => slot.court_id === targetCourtId && slot.status === 'upcoming')
+            .map(slot => slot.start_time)
+            .sort();
+    };
     
     const handleDateChange = (newDate: Date | undefined) => {
         setDate(newDate);
@@ -338,5 +413,7 @@ export const usePadelBooking = () => {
         submitBooking,
         reservationOpenDate,
         isBookingAlreadyOpen,
+        getFilteredTimeSlots,
+        isLoadingSlots,
     };
 }
