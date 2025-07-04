@@ -9,7 +9,6 @@ import { Info, User as UserIcon } from 'lucide-react';
 interface BookingSummaryProps {
     date: Date;
     startTime: string;
-    endTime: string;
     selectedCourt: string;
     isBookingAlreadyOpen: boolean;
     reservationOpenDate: Date | null;
@@ -19,7 +18,6 @@ interface BookingSummaryProps {
 const BookingSummary = ({
     date,
     startTime,
-    endTime,
     selectedCourt,
     isBookingAlreadyOpen,
     reservationOpenDate,
@@ -31,7 +29,7 @@ const BookingSummary = ({
             <CardContent className="space-y-3">
                 <p><strong>Terrain :</strong> Padel {selectedCourt}</p>
                 <p><strong>Date :</strong> {format(date, 'yyyy-MM-dd')}</p>
-                <p><strong>Heure :</strong> de {startTime} à {endTime}</p>
+                <p><strong>Heure :</strong> {startTime}</p>
                 
                 {isBookingAlreadyOpen ? (
                     <Alert>

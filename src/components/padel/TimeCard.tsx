@@ -16,8 +16,6 @@ interface TimeCardProps {
     date: Date | undefined;
     startTime: string;
     onStartTimeChange: (time: string) => void;
-    endTime: string;
-    onEndTimeChange: (time: string) => void;
 }
 
 const TimeCard = ({ date, startTime, onStartTimeChange }: TimeCardProps) => (

@@ -18,8 +18,6 @@ const PadelBooking = () => {
         handleDateChange,
         startTime,
         setStartTime,
-        endTime,
-        setEndTime,
         selectedCourt,
         setSelectedCourt,
         isSubmitting,
@@ -58,15 +56,12 @@ const PadelBooking = () => {
                         date={date}
                         startTime={startTime}
                         onStartTimeChange={setStartTime}
-                        endTime={endTime}
-                        onEndTimeChange={setEndTime}
                     />
 
-                    {startTime && endTime && date && (
+                    {startTime && date && (
                         <BookingSummary
                             date={date}
                             startTime={startTime}
-                            endTime={endTime}
                             selectedCourt={selectedCourt}
                             isBookingAlreadyOpen={isBookingAlreadyOpen}
                             reservationOpenDate={reservationOpenDate}
