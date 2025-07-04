@@ -20,7 +20,7 @@ interface TimeCardProps {
     onEndTimeChange: (time: string) => void;
 }
 
-const TimeCard = ({ date, startTime, onStartTimeChange, endTime, onEndTimeChange }: TimeCardProps) => (
+const TimeCard = ({ date, startTime, onStartTimeChange }: TimeCardProps) => (
     <Card>
         <CardHeader>
              <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> 3. Choisissez un créneau</CardTitle>
@@ -28,33 +28,18 @@ const TimeCard = ({ date, startTime, onStartTimeChange, endTime, onEndTimeChange
         </CardHeader>
         <CardContent>
            <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="start-time">Heure de début</Label>
-                        <Select onValueChange={onStartTimeChange} value={startTime}>
-                            <SelectTrigger id="start-time">
-                                <SelectValue placeholder="HH:MM" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {timeSlots.map(slot => (
-                                    <SelectItem key={`start-${slot}`} value={slot}>{slot}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label htmlFor="end-time">Heure de fin</Label>
-                        <Select onValueChange={onEndTimeChange} value={endTime}>
-                            <SelectTrigger id="end-time">
-                                <SelectValue placeholder="HH:MM" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {timeSlots.map(slot => (
-                                    <SelectItem key={`end-${slot}`} value={slot}>{slot}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                <div>
+                    <Label htmlFor="start-time">Heure de début</Label>
+                    <Select onValueChange={onStartTimeChange} value={startTime}>
+                        <SelectTrigger id="start-time">
+                            <SelectValue placeholder="HH:MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {timeSlots.map(slot => (
+                                <SelectItem key={`start-${slot}`} value={slot}>{slot}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
         </CardContent>
