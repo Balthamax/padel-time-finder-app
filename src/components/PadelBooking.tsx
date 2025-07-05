@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import PageHeader from './padel/PageHeader';
 import BookingWizard from './padel/BookingWizard';
-import PartnerModal from './padel/PartnerModal';
 import UserBookingsList from './padel/UserBookingsList';
 import RacingCredentialsModal from './padel/RacingCredentialsModal';
 import { usePadelBooking } from '@/hooks/usePadelBooking';
@@ -40,6 +39,7 @@ const PadelBooking = () => {
         isBookingAlreadyOpen,
         getFilteredTimeSlots,
         isLoadingSlots,
+        handleWizardSubmit,
     } = usePadelBooking();
 
     return (
@@ -64,7 +64,9 @@ const PadelBooking = () => {
                             onStartTimeChange={setStartTime}
                             availableSlots={getFilteredTimeSlots()}
                             isLoadingSlots={isLoadingSlots}
-                            onSubmit={handleInitiateBooking}
+                            partners={partners}
+                            onPartnerChange={handlePartnerChange}
+                            onSubmit={handleWizardSubmit}
                             isBookingAlreadyOpen={isBookingAlreadyOpen}
                             reservationOpenDate={reservationOpenDate}
                         />
@@ -95,15 +97,6 @@ const PadelBooking = () => {
                 racingPassword={racingPasswordInput}
                 setRacingPassword={setRacingPasswordInput}
                 onSubmit={handleRacingCredentialsSubmit}
-                isSubmitting={isSubmitting}
-            />
-
-            <PartnerModal 
-                isOpen={isPartnerModalOpen}
-                onOpenChange={setIsPartnerModalOpen}
-                partners={partners}
-                onPartnerChange={handlePartnerChange}
-                onSubmit={submitBooking}
                 isSubmitting={isSubmitting}
             />
         </div>

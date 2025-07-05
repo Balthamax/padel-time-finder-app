@@ -16,6 +16,7 @@ export type Database = {
           end_time: string
           id: string
           match_date: string
+          owner: string | null
           partner_1: string | null
           partner_2: string | null
           partner_3: string | null
@@ -30,6 +31,7 @@ export type Database = {
           end_time: string
           id?: string
           match_date: string
+          owner?: string | null
           partner_1?: string | null
           partner_2?: string | null
           partner_3?: string | null
@@ -44,6 +46,7 @@ export type Database = {
           end_time?: string
           id?: string
           match_date?: string
+          owner?: string | null
           partner_1?: string | null
           partner_2?: string | null
           partner_3?: string | null
@@ -52,7 +55,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bookings_owner_fkey"
+            columns: ["owner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partenaires: {
         Row: {

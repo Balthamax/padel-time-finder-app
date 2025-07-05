@@ -127,13 +127,13 @@ export const usePadelBooking = () => {
     const fetchAvailableSlots = async (selectedDate: Date) => {
         setIsLoadingSlots(true);
         try {
-            const response = await fetch('https://workflows.arkavia.fr/webhook-test/3a51fedd-a298-4d68-98f9-f9ffdf997b40', {
+            const response = await fetch('https://workflows.arkavia.fr/webhook/1a51fedd-o982-562j-98f9-f9ffdf997b49', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    selected_date: format(selectedDate, 'yyyy-MM-dd')
+                    date: format(selectedDate, 'yyyy-MM-dd')
                 })
             });
 
@@ -271,7 +271,7 @@ export const usePadelBooking = () => {
                 description: "Vous pouvez maintenant continuer votre demande.",
             });
             setIsRacingModalOpen(false);
-            setIsPartnerModalOpen(true);
+            submitBooking();
         }
     };
 
@@ -430,6 +430,27 @@ export const usePadelBooking = () => {
         }
     };
     
+    const handleWizardSubmit = () => {
+        // Vérifier si l'utilisateur non-admin a déjà une demande en attente
+        if (!isAdmin) {
+            const hasPendingBooking = bookings.some(booking => booking.status === 'pending');
+            if (hasPendingBooking) {
+                toast({
+                    title: "Demande déjà en cours",
+                    description: "Vous avez déjà une demande de réservation en attente. Veuillez l'annuler avant d'en créer une nouvelle.",
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
+
+        if (!profile?.racing_id || !profile?.racing_password) {
+            setIsRacingModalOpen(true);
+        } else {
+            submitBooking();
+        }
+    };
+    
     return {
         user,
         signOut,
@@ -461,5 +482,6 @@ export const usePadelBooking = () => {
         isBookingAlreadyOpen,
         getFilteredTimeSlots,
         isLoadingSlots,
+        handleWizardSubmit,
     };
 }

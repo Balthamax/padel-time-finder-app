@@ -8,7 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Layers, Clock, Rocket, Loader2, RotateCcw } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Calendar as CalendarIcon, Layers, Clock, Rocket, Loader2, RotateCcw, Users } from 'lucide-react';
+import type { Partner } from "@/hooks/usePadelBooking";
 
 interface BookingWizardProps {
     date: Date | undefined;
@@ -19,6 +21,8 @@ interface BookingWizardProps {
     onStartTimeChange: (time: string) => void;
     availableSlots: string[];
     isLoadingSlots: boolean;
+    partners: [Partner, Partner, Partner];
+    onPartnerChange: (index: number, field: 'first_name' | 'last_name', value: string) => void;
     onSubmit: () => void;
     isBookingAlreadyOpen: boolean;
     reservationOpenDate: Date | null;
@@ -33,6 +37,8 @@ const BookingWizard = ({
     onStartTimeChange,
     availableSlots,
     isLoadingSlots,
+    partners,
+    onPartnerChange,
     onSubmit,
     isBookingAlreadyOpen,
     reservationOpenDate
@@ -51,6 +57,12 @@ const BookingWizard = ({
             setCurrentStep(3);
         }
     }, [selectedCourt, currentStep]);
+
+    useEffect(() => {
+        if (startTime && currentStep === 3) {
+            setCurrentStep(4);
+        }
+    }, [startTime, currentStep]);
 
     const handleDateSelect = (newDate: Date | undefined) => {
         onDateChange(newDate);
@@ -71,7 +83,7 @@ const BookingWizard = ({
         setCurrentStep(step);
     };
 
-    const canShowFinalButton = date && selectedCourt && startTime;
+    const canShowFinalButton = date && selectedCourt && startTime && currentStep >= 4;
 
     return (
         <Card className="w-full">
@@ -163,39 +175,87 @@ const BookingWizard = ({
 
                 {/* Étape 3: Créneau */}
                 {currentStep >= 3 && (
-                    <div>
+                    <div className={currentStep === 3 ? '' : 'opacity-75'}>
                         <div className="flex items-center gap-2 mb-3">
                             <Clock className="w-5 h-5 text-blue-600" />
                             <h3 className="font-semibold">
-                                3. Choisissez un créneau
-                                {isLoadingSlots && <Loader2 className="w-4 h-4 animate-spin inline ml-2" />}
+                                {currentStep === 3 ? '3. Choisissez un créneau' : (
+                                    <button 
+                                        onClick={() => handleEditStep(3)}
+                                        className="text-left hover:underline"
+                                    >
+                                        Heure: {startTime || ''}
+                                    </button>
+                                )}
+                                {isLoadingSlots && currentStep === 3 && <Loader2 className="w-4 h-4 animate-spin inline ml-2" />}
                             </h3>
                         </div>
-                        {date && (
-                            <p className="text-sm text-muted-foreground mb-3">
-                                {format(date, 'eeee dd MMMM yyyy', { locale: fr })}
-                            </p>
+                        {currentStep === 3 && (
+                            <>
+                                {date && (
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                        {format(date, 'eeee dd MMMM yyyy', { locale: fr })}
+                                    </p>
+                                )}
+                                <div className="space-y-2">
+                                    <Label htmlFor="time-select">Heure de début</Label>
+                                    <Select onValueChange={onStartTimeChange} value={startTime} disabled={isLoadingSlots}>
+                                        <SelectTrigger id="time-select">
+                                            <SelectValue placeholder={isLoadingSlots ? "Chargement..." : "HH:MM"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableSlots.length > 0 ? (
+                                                availableSlots.map(slot => (
+                                                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                                ))
+                                            ) : (
+                                                !isLoadingSlots && (
+                                                    <SelectItem value="no-slots" disabled>
+                                                        Aucun créneau disponible
+                                                    </SelectItem>
+                                                )
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </>
                         )}
-                        <div className="space-y-2">
-                            <Label htmlFor="time-select">Heure de début</Label>
-                            <Select onValueChange={onStartTimeChange} value={startTime} disabled={isLoadingSlots}>
-                                <SelectTrigger id="time-select">
-                                    <SelectValue placeholder={isLoadingSlots ? "Chargement..." : "HH:MM"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableSlots.length > 0 ? (
-                                        availableSlots.map(slot => (
-                                            <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                                        ))
-                                    ) : (
-                                        !isLoadingSlots && (
-                                            <SelectItem value="no-slots" disabled>
-                                                Aucun créneau disponible
-                                            </SelectItem>
-                                        )
-                                    )}
-                                </SelectContent>
-                            </Select>
+                    </div>
+                )}
+
+                {/* Étape 4: Participants */}
+                {currentStep >= 4 && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <Users className="w-5 h-5 text-blue-600" />
+                            <h3 className="font-semibold">4. Renseigner les partenaires</h3>
+                        </div>
+                        <div className="space-y-4">
+                            {[0, 1, 2].map((i) => (
+                                <div key={i} className="space-y-3 p-4 border rounded-md bg-muted/20">
+                                    <h4 className="font-medium text-sm">Partenaire {i + 1}</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`partner${i + 1}-first`}>Prénom</Label>
+                                            <Input
+                                                id={`partner${i + 1}-first`}
+                                                value={partners[i].first_name}
+                                                onChange={(e) => onPartnerChange(i, 'first_name', e.target.value)}
+                                                placeholder="Jean-Philippe"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`partner${i + 1}-last`}>Nom</Label>
+                                            <Input
+                                                id={`partner${i + 1}-last`}
+                                                value={partners[i].last_name}
+                                                onChange={(e) => onPartnerChange(i, 'last_name', e.target.value)}
+                                                placeholder="BERNE"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
